@@ -1,5 +1,6 @@
 import { pool } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { findOrCreateAuthor, findOrCreatePublisher } from "@/lib/staff-helpers";
 
 async function getBooks() {
   const { rows } = await pool.query(`
@@ -26,39 +27,6 @@ async function getCategories() {
     "SELECT id, name FROM categories ORDER BY sort_order"
   );
   return rows;
-}
-
-// Finds an existing row by case-insensitive exact name match, or
-// creates a new one. This is the simplest possible version of the
-// brief's "be warned before adding it twice" idea — exact-match only
-// for now. Fuzzy "did you mean...?" matching (using the trigram
-// indexes already in the schema) is a natural next improvement.
-async function findOrCreateAuthor(name: string): Promise<string> {
-  const existing = await pool.query(
-    "SELECT id FROM authors WHERE lower(canonical_name) = lower($1) LIMIT 1",
-    [name]
-  );
-  if (existing.rows.length > 0) return existing.rows[0].id;
-
-  const created = await pool.query(
-    "INSERT INTO authors (canonical_name) VALUES ($1) RETURNING id",
-    [name]
-  );
-  return created.rows[0].id;
-}
-
-async function findOrCreatePublisher(name: string): Promise<string> {
-  const existing = await pool.query(
-    "SELECT id FROM publishers WHERE lower(name) = lower($1) LIMIT 1",
-    [name]
-  );
-  if (existing.rows.length > 0) return existing.rows[0].id;
-
-  const created = await pool.query(
-    "INSERT INTO publishers (name) VALUES ($1) RETURNING id",
-    [name]
-  );
-  return created.rows[0].id;
 }
 
 async function addBook(formData: FormData) {
@@ -95,11 +63,29 @@ async function addBook(formData: FormData) {
   revalidatePath("/staff/books");
 }
 
+async function deleteBook(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string;
+  await pool.query("DELETE FROM books WHERE id = $1", [id]);
+  revalidatePath("/staff/books");
+}
+
+function StaffNav() {
+  return (
+    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", fontSize: 14 }}>
+      <a href="/staff/books" style={{ fontWeight: "bold" }}>الكتب</a>
+      <a href="/staff/authors">المؤلفون</a>
+      <a href="/staff/publishers">الناشرون</a>
+    </nav>
+  );
+}
+
 export default async function StaffBooksPage() {
   const [books, categories] = await Promise.all([getBooks(), getCategories()]);
 
   return (
     <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: 900, margin: "0 auto" }}>
+      <StaffNav />
       <h1>إدارة الكتب</h1>
       <p style={{ color: "#666" }}>
         صفحة تجريبية لإضافة الكتب — بدون تسجيل دخول بعد (سيُضاف لاحقًا).
@@ -154,6 +140,8 @@ export default async function StaffBooksPage() {
                 <th style={{ padding: 8 }}>الناشر</th>
                 <th style={{ padding: 8 }}>التصنيف</th>
                 <th style={{ padding: 8 }}>الكمية</th>
+                <th style={{ padding: 8 }}></th>
+                <th style={{ padding: 8 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -164,6 +152,17 @@ export default async function StaffBooksPage() {
                   <td style={{ padding: 8 }}>{b.publisher_name || "—"}</td>
                   <td style={{ padding: 8 }}>{b.category_name || "—"}</td>
                   <td style={{ padding: 8 }}>{b.quantity}</td>
+                  <td style={{ padding: 8 }}>
+                    <a href={`/staff/books/${b.id}/edit`}>تعديل</a>
+                  </td>
+                  <td style={{ padding: 8 }}>
+                    <form action={deleteBook}>
+                      <input type="hidden" name="id" value={b.id} />
+                      <button type="submit" style={{ color: "#b00", cursor: "pointer" }}>
+                        حذف
+                      </button>
+                    </form>
+                  </td>
                 </tr>
               ))}
             </tbody>
