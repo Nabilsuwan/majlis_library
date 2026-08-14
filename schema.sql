@@ -28,12 +28,13 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";    -- trigram similarity for
 CREATE TYPE staff_role AS ENUM ('cataloguer', 'admin', 'viewer');
 
 CREATE TABLE staff (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        TEXT NOT NULL,
-    email       TEXT NOT NULL UNIQUE,
-    role        staff_role NOT NULL DEFAULT 'cataloguer',
-    is_active   BOOLEAN NOT NULL DEFAULT true,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name          TEXT NOT NULL,
+    email         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role          staff_role NOT NULL DEFAULT 'cataloguer',
+    is_active     BOOLEAN NOT NULL DEFAULT true,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ------------------------------------------------------------
