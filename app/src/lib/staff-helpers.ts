@@ -32,18 +32,13 @@ export async function findOrCreatePublisher(name: string): Promise<string> {
   return created.rows[0].id;
 }
 
-// Builds a URL-friendly slug from a book title plus a short chunk of
-// its id, so the public book page has a stable, shareable, readable
-// address (e.g. /books/تاريخ-الطبري-a1b2c3d4) instead of a bare UUID.
-// Arabic characters are kept as-is — modern browsers and search
-// engines handle non-Latin URLs natively.
-export function slugify(title: string, id: string): string {
-  const base = title
-    .trim()
-    .replace(/[\u064B-\u065F\u0670]/g, "") // strip Arabic diacritics
-    .replace(/\s+/g, "-")
-    .replace(/[^\p{L}\p{N}-]/gu, "")
-    .toLowerCase();
-  const suffix = id.replace(/-/g, "").slice(0, 8);
-  return `${base}-${suffix}`;
+// Builds a short, plain-ASCII slug from a book id. Earlier this
+// embedded the Arabic title directly in the URL, but some routing
+// layers don't reliably handle non-Latin characters in dynamic path
+// segments (confirmed: requests never reached the server at all,
+// rejected at the edge before any function ran). The Arabic title
+// still displays prominently on the page itself — that matters far
+// more for readability and search visibility than the URL text does.
+export function slugify(_title: string, id: string): string {
+  return id.replace(/-/g, "").slice(0, 8);
 }
