@@ -4,6 +4,7 @@ import { pool } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { findOrCreateAuthor, findOrCreatePublisher, slugify } from "@/lib/staff-helpers";
 import { randomUUID } from "crypto";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, EditIcon, TrashIcon, FeatherIcon, PlusIcon } from "@/lib/icons";
 
 async function getBooks() {
   const { rows } = await pool.query(`
@@ -78,16 +79,52 @@ async function deleteBook(formData: FormData) {
   revalidatePath("/books");
 }
 
+function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
+  return (
+    
+    <a
+      href={href}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        padding: "8px 10px",
+        borderRadius: 6,
+        backgroundColor: active ? "#9B2226" : "transparent",
+        color: active ? "#EDE3D0" : "#C9BFA8",
+        textDecoration: "none",
+        minWidth: 56,
+        flexShrink: 0,
+        fontSize: 11,
+      }}
+    >
+      {icon}
+      {label}
+    </a>
+  );
+}
+
 function StaffNav() {
   return (
-    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", fontSize: 14, alignItems: "center" }}>
-      <a href="/staff/books" style={{ fontWeight: "bold" }}>الكتب</a>
-      <a href="/staff/authors">المؤلفون</a>
-      <a href="/staff/publishers">الناشرون</a>
-      <a href="/staff/intake">إضافة بالتصوير</a>
-      <span style={{ flex: 1 }} />
-      <a href="/">الرئيسية</a>
-      <a href="/staff/logout">تسجيل خروج</a>
+    <nav
+      style={{
+        display: "flex",
+        gap: 4,
+        marginBottom: "1.5rem",
+        backgroundColor: "#1C1712",
+        borderRadius: 8,
+        padding: 6,
+        overflowX: "auto",
+      }}
+    >
+      {navLink("/staff/books", true, <BookIcon />, "الكتب")}
+      {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
+      {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
+      {navLink("/staff/intake", false, <CameraIcon />, "تصوير")}
+      <span style={{ flex: 1, minWidth: 8 }} />
+      {navLink("/", false, <HomeIcon />, "الرئيسية")}
+      {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}
     </nav>
   );
 }
@@ -96,31 +133,31 @@ export default async function StaffBooksPage() {
   const [books, categories] = await Promise.all([getBooks(), getCategories()]);
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: 900, margin: "0 auto" }}>
+    <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 900, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <StaffNav />
-      <h1>إدارة الكتب</h1>
-      <p style={{ color: "#666" }}>
-        صفحة تجريبية لإضافة الكتب — بدون تسجيل دخول بعد (سيُضاف لاحقًا).
-      </p>
 
-      <section style={{ margin: "2rem 0", padding: "1.5rem", border: "1px solid #ddd", borderRadius: 8 }}>
-        <h2>إضافة كتاب جديد</h2>
-        <form action={addBook} style={{ display: "grid", gap: "1rem", maxWidth: 500 }}>
-          <label>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <h1 style={{ fontSize: 20, margin: 0 }}>إدارة الكتب</h1>
+      </div>
+
+      <section style={{ margin: "0 0 1.5rem", padding: "1.25rem", backgroundColor: "#F6F0E2", borderRadius: 10 }}>
+        <h2 style={{ fontSize: 16, marginTop: 0 }}>إضافة كتاب جديد</h2>
+        <form action={addBook} style={{ display: "grid", gap: "0.85rem" }}>
+          <label style={{ fontSize: 13 }}>
             العنوان *
-            <input name="title" required style={{ width: "100%", padding: 8 }} />
+            <input name="title" required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
           </label>
-          <label>
+          <label style={{ fontSize: 13 }}>
             المؤلف *
-            <input name="author" required style={{ width: "100%", padding: 8 }} />
+            <input name="author" required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
           </label>
-          <label>
+          <label style={{ fontSize: 13 }}>
             الناشر
-            <input name="publisher" style={{ width: "100%", padding: 8 }} />
+            <input name="publisher" style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
           </label>
-          <label>
+          <label style={{ fontSize: 13 }}>
             التصنيف *
-            <select name="category_id" required style={{ width: "100%", padding: 8 }}>
+            <select name="category_id" required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}>
               <option value="">— اختر —</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -129,57 +166,74 @@ export default async function StaffBooksPage() {
               ))}
             </select>
           </label>
-          <label>
+          <label style={{ fontSize: 13 }}>
             الكمية
-            <input name="quantity" type="number" defaultValue={1} min={1} style={{ width: "100%", padding: 8 }} />
+            <input name="quantity" type="number" defaultValue={1} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
           </label>
-          <button type="submit" style={{ padding: "10px 20px", cursor: "pointer" }}>
+          <button
+            type="submit"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              padding: "10px 20px",
+              backgroundColor: "#9B2226",
+              color: "#EDE3D0",
+              border: "none",
+              borderRadius: 6,
+              cursor: "pointer",
+              fontSize: 14,
+            }}
+          >
+            <PlusIcon />
             حفظ
           </button>
         </form>
       </section>
 
       <section>
-        <h2>الكتب الحالية ({books.length})</h2>
+        <h2 style={{ fontSize: 16 }}>الكتب الحالية ({books.length})</h2>
         {books.length === 0 ? (
-          <p style={{ color: "#666" }}>لا توجد كتب بعد.</p>
+          <p style={{ color: "#8C7A5E" }}>لا توجد كتب بعد.</p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #ddd", textAlign: "right" }}>
-                <th style={{ padding: 8 }}>العنوان</th>
-                <th style={{ padding: 8 }}>المؤلف</th>
-                <th style={{ padding: 8 }}>الناشر</th>
-                <th style={{ padding: 8 }}>التصنيف</th>
-                <th style={{ padding: 8 }}>الكمية</th>
-                <th style={{ padding: 8 }}></th>
-                <th style={{ padding: 8 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {books.map((b) => (
-                <tr key={b.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: 8 }}>{b.title}</td>
-                  <td style={{ padding: 8 }}>{b.authors || "—"}</td>
-                  <td style={{ padding: 8 }}>{b.publisher_name || "—"}</td>
-                  <td style={{ padding: 8 }}>{b.category_name || "—"}</td>
-                  <td style={{ padding: 8 }}>{b.quantity}</td>
-                  <td style={{ padding: 8 }}>
-                    <a href={`/staff/books/${b.id}/edit`}>تعديل</a>
-                  </td>
-                  <td style={{ padding: 8 }}>
-                    <form action={deleteBook}>
-                      <input type="hidden" name="id" value={b.id} />
-                      <button type="submit" style={{ color: "#b00", cursor: "pointer" }}>
-                        حذف
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {books.map((b) => (
+              <div key={b.id} style={{ backgroundColor: "#F6F0E2", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>{b.title}</div>
+                  {b.category_name && (
+                    <span style={{ backgroundColor: "#9B2226", color: "#F6E9E9", fontSize: 11, padding: "3px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                      {b.category_name}
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 13, color: "#5C5040" }}>
+                  <FeatherIcon />
+                  {b.authors || "—"}
+                </div>
+                {b.publisher_name && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, fontSize: 13, color: "#5C5040" }}>
+                    <BuildingIcon size={14} />
+                    {b.publisher_name}
+                  </div>
+                )}
+                <div style={{ marginTop: 2, fontSize: 13, color: "#5C5040" }}>الكمية: {b.quantity}</div>
+                <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "0.5px solid #C9BFA8" }}>
+                  <a href={`/staff/books/${b.id}/edit`} style={{ display: "flex", alignItems: "center", gap: 4, color: "#1C1712", fontSize: 13, textDecoration: "none" }}>
+                    <EditIcon />
+                    تعديل
+                  </a>
+                  <form action={deleteBook}>
+                    <input type="hidden" name="id" value={b.id} />
+                    <button type="submit" style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "#9B2226", fontSize: 13, cursor: "pointer", padding: 0 }}>
+                      <TrashIcon />
+                      حذف
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
