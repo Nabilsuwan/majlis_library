@@ -25,10 +25,13 @@ async function renamePublisher(formData: FormData) {
 
 function StaffNav() {
   return (
-    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", fontSize: 14 }}>
+    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", fontSize: 14, alignItems: "center" }}>
       <a href="/staff/books">الكتب</a>
       <a href="/staff/authors">المؤلفون</a>
       <a href="/staff/publishers" style={{ fontWeight: "bold" }}>الناشرون</a>
+      <span style={{ flex: 1 }} />
+      <a href="/">الرئيسية</a>
+      <a href="/staff/logout">تسجيل خروج</a>
     </nav>
   );
 }

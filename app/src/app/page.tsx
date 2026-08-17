@@ -7,6 +7,11 @@ export default function Home() {
         تحقق من حالة الاتصال بقاعدة البيانات عبر{" "}
         <a href="/api/health">/api/health</a>
       </p>
+      <p style={{ marginTop: "2rem" }}>
+        <a href="/staff/login" style={{ fontWeight: "bold" }}>
+          دخول الموظفين
+        </a>
+      </p>
     </main>
   );
 }
