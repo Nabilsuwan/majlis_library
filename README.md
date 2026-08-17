@@ -1,6 +1,7 @@
 # Majlis Library System (sharjahbook.com)
 
 Rebuild of the Arabic scholarly/heritage book library — replacing a
+
 job-board system that was never built for a library — with staff
 cataloguing tools, photograph-to-add intake, and a public Arabic
 search/browse site.
