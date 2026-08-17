@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { pool } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { findOrCreateAuthor, findOrCreatePublisher } from "@/lib/staff-helpers";
+import { findOrCreateAuthor, findOrCreatePublisher, slugify } from "@/lib/staff-helpers";
+import { randomUUID } from "crypto";
 
 async function getBooks() {
   const { rows } = await pool.query(`
@@ -49,11 +50,14 @@ async function addBook(formData: FormData) {
     ? await findOrCreatePublisher(publisherName)
     : null;
 
+  const bookId = randomUUID();
+  const slug = slugify(title, bookId);
+
   const book = await pool.query(
-    `INSERT INTO books (title, publisher_id, category_id, quantity, status)
-     VALUES ($1, $2, $3, $4, 'published')
+    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status)
+     VALUES ($1, $2, $3, $4, $5, $6, 'published')
      RETURNING id`,
-    [title, publisherId, categoryId, quantity]
+    [bookId, title, slug, publisherId, categoryId, quantity]
   );
 
   await pool.query(
@@ -63,6 +67,7 @@ async function addBook(formData: FormData) {
   );
 
   revalidatePath("/staff/books");
+  revalidatePath("/books");
 }
 
 async function deleteBook(formData: FormData) {
@@ -70,6 +75,7 @@ async function deleteBook(formData: FormData) {
   const id = formData.get("id") as string;
   await pool.query("DELETE FROM books WHERE id = $1", [id]);
   revalidatePath("/staff/books");
+  revalidatePath("/books");
 }
 
 function StaffNav() {

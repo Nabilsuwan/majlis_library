@@ -31,3 +31,19 @@ export async function findOrCreatePublisher(name: string): Promise<string> {
   );
   return created.rows[0].id;
 }
+
+// Builds a URL-friendly slug from a book title plus a short chunk of
+// its id, so the public book page has a stable, shareable, readable
+// address (e.g. /books/تاريخ-الطبري-a1b2c3d4) instead of a bare UUID.
+// Arabic characters are kept as-is — modern browsers and search
+// engines handle non-Latin URLs natively.
+export function slugify(title: string, id: string): string {
+  const base = title
+    .trim()
+    .replace(/[\u064B-\u065F\u0670]/g, "") // strip Arabic diacritics
+    .replace(/\s+/g, "-")
+    .replace(/[^\p{L}\p{N}-]/gu, "")
+    .toLowerCase();
+  const suffix = id.replace(/-/g, "").slice(0, 8);
+  return `${base}-${suffix}`;
+}
