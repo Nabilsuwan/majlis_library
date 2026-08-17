@@ -67,28 +67,23 @@ export default async function BooksPage({
   ]);
 
   return (
-    <main
-      dir="rtl"
-      style={{
-        padding: "2rem",
-        fontFamily: "sans-serif",
-        maxWidth: 900,
-        margin: "0 auto",
-      }}
-    >
-      <p>
-        <a href="/" style={{ color: "inherit" }}>
+    <main style={{ maxWidth: 760, margin: "0 auto", padding: "3rem 1.5rem 6rem" }}>
+      <p style={{ fontFamily: "var(--font-ui), sans-serif", fontSize: "0.85rem" }}>
+        <a href="/" style={{ color: "#9B2226", textDecoration: "none" }}>
           المجلس
-        </a>{" "}
-        — تصفح الكتب
+        </a>
+        <span style={{ color: "#8C7A5E" }}> / تصفح الكتب</span>
       </p>
-      <h1>مكتبة المجلس</h1>
+      <h1 style={{ fontSize: "2.1rem", margin: "0.5rem 0 2rem" }}>
+        فهرس المكتبة
+      </h1>
 
       <form
         style={{
           display: "flex",
-          gap: "1rem",
-          margin: "1.5rem 0",
+          gap: "0.75rem",
+          marginBottom: "2rem",
+          fontFamily: "var(--font-ui), sans-serif",
           flexWrap: "wrap",
         }}
       >
@@ -96,12 +91,24 @@ export default async function BooksPage({
           name="q"
           defaultValue={q}
           placeholder="ابحث عن كتاب..."
-          style={{ flex: 1, minWidth: 200, padding: 10 }}
+          style={{
+            flex: 1,
+            minWidth: 200,
+            padding: "0.7rem 1rem",
+            border: "1px solid #C9BFA8",
+            backgroundColor: "#F6F0E2",
+            borderRadius: 2,
+          }}
         />
         <select
           name="category"
           defaultValue={categoryId}
-          style={{ padding: 10 }}
+          style={{
+            padding: "0.7rem 1rem",
+            border: "1px solid #C9BFA8",
+            backgroundColor: "#F6F0E2",
+            borderRadius: 2,
+          }}
         >
           <option value="">كل التصنيفات</option>
           {categories.map((c) => (
@@ -110,41 +117,80 @@ export default async function BooksPage({
             </option>
           ))}
         </select>
-        <button type="submit" style={{ padding: "10px 20px" }}>
+        <button
+          type="submit"
+          style={{
+            padding: "0.7rem 1.5rem",
+            backgroundColor: "#1C1712",
+            color: "#EDE3D0",
+            border: "none",
+            borderRadius: 2,
+            fontFamily: "var(--font-ui), sans-serif",
+            fontWeight: 600,
+          }}
+        >
           بحث
         </button>
       </form>
 
-      <p style={{ color: "#666" }}>{books.length} نتيجة</p>
+      <p
+        style={{
+          fontFamily: "var(--font-ui), sans-serif",
+          fontSize: "0.8rem",
+          color: "#8C7A5E",
+          marginBottom: "1rem",
+        }}
+      >
+        {books.length} نتيجة
+      </p>
 
-      <div style={{ display: "grid", gap: "1rem" }}>
+      <div>
         {books.map((b) => (
-          <a
           
+          <a
             key={b.id}
             href={`/books/${b.slug}`}
             style={{
               display: "block",
-              padding: "1rem",
-              border: "1px solid #ddd",
-              borderRadius: 8,
+              padding: "1.25rem 0",
+              borderTop: "1px solid #C9BFA8",
               textDecoration: "none",
               color: "inherit",
             }}
           >
-            <div style={{ fontWeight: "bold", fontSize: 18 }}>{b.title}</div>
-            <div style={{ color: "#666" }}>
+            <div style={{ fontSize: "1.3rem", fontWeight: 700 }}>
+              {b.title}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-ui), sans-serif",
+                fontSize: "0.85rem",
+                color: "#5C5040",
+                marginTop: "0.35rem",
+              }}
+            >
               {b.authors || "مؤلف غير معروف"}
               {b.publisher_name ? ` — ${b.publisher_name}` : ""}
             </div>
             {b.category_name && (
-              <div style={{ fontSize: 13, color: "#999" }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-ui), sans-serif",
+                  fontSize: "0.75rem",
+                  color: "#9B2226",
+                  marginTop: "0.25rem",
+                }}
+              >
                 {b.category_name}
               </div>
             )}
           </a>
         ))}
-        {books.length === 0 && <p>لا توجد نتائج مطابقة.</p>}
+        {books.length === 0 && (
+          <p style={{ fontFamily: "var(--font-ui), sans-serif", color: "#8C7A5E" }}>
+            لا توجد نتائج مطابقة.
+          </p>
+        )}
       </div>
     </main>
   );
