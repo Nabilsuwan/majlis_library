@@ -2,6 +2,7 @@ import { pool } from "@/lib/db";
 import { cookies } from "next/headers";
 import { verifySessionToken } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
 
 async function analyzePhoto(formData: FormData) {
   "use server";
@@ -79,41 +80,92 @@ async function analyzePhoto(formData: FormData) {
   redirect(`/staff/intake/${result.rows[0].id}/review`);
 }
 
+function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
+  return (
+    
+    <a
+      href={href}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        padding: "8px 10px",
+        borderRadius: 6,
+        backgroundColor: active ? "#9B2226" : "transparent",
+        color: active ? "#EDE3D0" : "#C9BFA8",
+        textDecoration: "none",
+        minWidth: 56,
+        flexShrink: 0,
+        fontSize: 11,
+      }}
+    >
+      {icon}
+      {label}
+    </a>
+  );
+}
+
 function StaffNav() {
   return (
-    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", fontSize: 14, alignItems: "center" }}>
-      <a href="/staff/books" style={{ fontWeight: "bold" }}>الكتب</a>
-      <a href="/staff/authors">المؤلفون</a>
-      <a href="/staff/publishers">الناشرون</a>
-      <span style={{ flex: 1 }} />
-      <a href="/">الرئيسية</a>
-      <a href="/staff/logout">تسجيل خروج</a>
+    <nav
+      style={{
+        display: "flex",
+        gap: 4,
+        marginBottom: "1.5rem",
+        backgroundColor: "#1C1712",
+        borderRadius: 8,
+        padding: 6,
+        overflowX: "auto",
+      }}
+    >
+      {navLink("/staff/books", false, <BookIcon />, "الكتب")}
+      {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
+      {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
+      {navLink("/staff/intake", true, <CameraIcon />, "تصوير")}
+      <span style={{ flex: 1, minWidth: 8 }} />
+      {navLink("/", false, <HomeIcon />, "الرئيسية")}
+      {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}
     </nav>
   );
 }
 
 export default function IntakePage() {
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto" }}>
+    <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <StaffNav />
-      <h1>إضافة كتاب بالتصوير</h1>
-      <p style={{ color: "#666" }}>
+      <h1 style={{ fontSize: 20 }}>إضافة كتاب بالتصوير</h1>
+      <p style={{ color: "#5C5040", fontSize: 13 }}>
         صوّر غلاف الكتاب، وسيحاول النظام قراءة العنوان والمؤلف والناشر
         تلقائيًا. ستتمكن من مراجعة النتيجة وتصحيحها قبل الحفظ.
       </p>
-      <form action={analyzePhoto} style={{ marginTop: "1.5rem" }}>
+      <form action={analyzePhoto} style={{ marginTop: "1.25rem", backgroundColor: "#F6F0E2", borderRadius: 10, padding: "1.25rem" }}>
         <input
           type="file"
           name="photo"
           accept="image/*"
           capture="environment"
           required
-          style={{ display: "block", marginBottom: "1rem" }}
+          style={{ display: "block", marginBottom: "1rem", width: "100%" }}
         />
         <button
           type="submit"
-          style={{ padding: "10px 24px", cursor: "pointer" }}
+          style={{
+            width: "100%",
+            padding: "12px 24px",
+            backgroundColor: "#9B2226",
+            color: "#EDE3D0",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer",
+            fontSize: 14,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
         >
+          <CameraIcon size={16} />
           تحليل الصورة
         </button>
       </form>
