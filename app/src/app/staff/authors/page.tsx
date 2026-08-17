@@ -155,6 +155,7 @@ export default async function StaffAuthorsPage() {
             تنبيه: هناك {duplicateNames.size} اسم مؤلف مكرر أدناه (مظلل) — يُنصح بدمجها.
           </p>
         )}
+        <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #ddd", textAlign: "right" }}>
@@ -188,6 +189,7 @@ export default async function StaffAuthorsPage() {
             })}
           </tbody>
         </table>
+        </div>
       </section>
     </main>
   );

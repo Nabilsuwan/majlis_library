@@ -49,6 +49,7 @@ export default async function StaffPublishersPage() {
         {publishers.length === 0 ? (
           <p style={{ color: "#666" }}>لا يوجد ناشرون بعد.</p>
         ) : (
+          <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #ddd", textAlign: "right" }}>
@@ -71,6 +72,7 @@ export default async function StaffPublishersPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </main>
