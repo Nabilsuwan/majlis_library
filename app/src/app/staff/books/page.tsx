@@ -84,6 +84,7 @@ function StaffNav() {
       <a href="/staff/books" style={{ fontWeight: "bold" }}>الكتب</a>
       <a href="/staff/authors">المؤلفون</a>
       <a href="/staff/publishers">الناشرون</a>
+      <a href="/staff/intake">إضافة بالتصوير</a>
       <span style={{ flex: 1 }} />
       <a href="/">الرئيسية</a>
       <a href="/staff/logout">تسجيل خروج</a>
