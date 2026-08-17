@@ -8,6 +8,9 @@ export default function Home() {
         <a href="/api/health">/api/health</a>
       </p>
       <p style={{ marginTop: "2rem" }}>
+        <a href="/books" style={{ fontWeight: "bold", marginLeft: "2rem" }}>
+          تصفح الكتب
+        </a>
         <a href="/staff/login" style={{ fontWeight: "bold" }}>
           دخول الموظفين
         </a>
