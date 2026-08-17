@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { pool } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
 
 async function getPublishers() {
   const { rows } = await pool.query(`
@@ -23,15 +24,52 @@ async function renamePublisher(formData: FormData) {
   revalidatePath("/staff/publishers");
 }
 
+function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
+  return (
+    
+    <a
+      href={href}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        padding: "8px 10px",
+        borderRadius: 6,
+        backgroundColor: active ? "#9B2226" : "transparent",
+        color: active ? "#EDE3D0" : "#C9BFA8",
+        textDecoration: "none",
+        minWidth: 56,
+        flexShrink: 0,
+        fontSize: 11,
+      }}
+    >
+      {icon}
+      {label}
+    </a>
+  );
+}
+
 function StaffNav() {
   return (
-    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", fontSize: 14, alignItems: "center" }}>
-      <a href="/staff/books">الكتب</a>
-      <a href="/staff/authors">المؤلفون</a>
-      <a href="/staff/publishers" style={{ fontWeight: "bold" }}>الناشرون</a>
-      <span style={{ flex: 1 }} />
-      <a href="/">الرئيسية</a>
-      <a href="/staff/logout">تسجيل خروج</a>
+    <nav
+      style={{
+        display: "flex",
+        gap: 4,
+        marginBottom: "1.5rem",
+        backgroundColor: "#1C1712",
+        borderRadius: 8,
+        padding: 6,
+        overflowX: "auto",
+      }}
+    >
+      {navLink("/staff/books", false, <BookIcon />, "الكتب")}
+      {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
+      {navLink("/staff/publishers", true, <BuildingIcon />, "الناشرون")}
+      {navLink("/staff/intake", false, <CameraIcon />, "تصوير")}
+      <span style={{ flex: 1, minWidth: 8 }} />
+      {navLink("/", false, <HomeIcon />, "الرئيسية")}
+      {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}
     </nav>
   );
 }
@@ -40,38 +78,36 @@ export default async function StaffPublishersPage() {
   const publishers = await getPublishers();
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: 900, margin: "0 auto" }}>
+    <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 900, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <StaffNav />
-      <h1>إدارة الناشرين</h1>
+      <h1 style={{ fontSize: 20 }}>إدارة الناشرين</h1>
 
       <section>
-        <h2>جميع الناشرين ({publishers.length})</h2>
+        <h2 style={{ fontSize: 16 }}>جميع الناشرين ({publishers.length})</h2>
         {publishers.length === 0 ? (
-          <p style={{ color: "#666" }}>لا يوجد ناشرون بعد.</p>
+          <p style={{ color: "#8C7A5E" }}>لا يوجد ناشرون بعد.</p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #ddd", textAlign: "right" }}>
-                <th style={{ padding: 8 }}>الاسم</th>
-                <th style={{ padding: 8 }}>عدد الكتب</th>
-              </tr>
-            </thead>
-            <tbody>
-              {publishers.map((p) => (
-                <tr key={p.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: 8 }}>
-                    <form action={renamePublisher} style={{ display: "flex", gap: 8 }}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <input name="name" defaultValue={p.name} style={{ padding: 6, flex: 1 }} />
-                      <button type="submit" style={{ cursor: "pointer" }}>حفظ</button>
-                    </form>
-                  </td>
-                  <td style={{ padding: 8 }}>{p.book_count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {publishers.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  backgroundColor: "#F6F0E2",
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <form action={renamePublisher} style={{ display: "flex", gap: 8, flex: 1 }}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <input name="name" defaultValue={p.name} style={{ padding: 6, flex: 1, fontSize: 14 }} />
+                  <button type="submit" style={{ fontSize: 12, cursor: "pointer" }}>حفظ</button>
+                </form>
+                <span style={{ fontSize: 12, color: "#8C7A5E", whiteSpace: "nowrap" }}>{p.book_count} كتاب</span>
+              </div>
+            ))}
           </div>
         )}
       </section>
