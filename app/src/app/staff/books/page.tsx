@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { pool } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { findOrCreateAuthor, findOrCreatePublisher } from "@/lib/staff-helpers";

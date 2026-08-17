@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { pool } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { findOrCreateAuthor, findOrCreatePublisher } from "@/lib/staff-helpers";
