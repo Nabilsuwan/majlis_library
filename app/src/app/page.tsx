@@ -29,7 +29,7 @@ export default function Home() {
           letterSpacing: "0.02em",
         }}
       >
-        المجلس
+        مكتبة المجلس
       </h1>
       <p
         style={{
