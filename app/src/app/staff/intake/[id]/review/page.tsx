@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { verifySessionToken } from "@/lib/auth";
 import { findOrCreateAuthor, findOrCreatePublisher, slugify } from "@/lib/staff-helpers";
 import { randomUUID } from "crypto";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
 
 async function getSubmission(id: string) {
   const { rows } = await pool.query(
@@ -69,15 +70,52 @@ async function confirmIntake(formData: FormData) {
   redirect("/staff/books");
 }
 
+function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
+  return (
+    
+    <a
+      href={href}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        padding: "8px 10px",
+        borderRadius: 6,
+        backgroundColor: active ? "#9B2226" : "transparent",
+        color: active ? "#EDE3D0" : "#C9BFA8",
+        textDecoration: "none",
+        minWidth: 56,
+        flexShrink: 0,
+        fontSize: 11,
+      }}
+    >
+      {icon}
+      {label}
+    </a>
+  );
+}
+
 function StaffNav() {
   return (
-    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", fontSize: 14, alignItems: "center" }}>
-      <a href="/staff/books" style={{ fontWeight: "bold" }}>الكتب</a>
-      <a href="/staff/authors">المؤلفون</a>
-      <a href="/staff/publishers">الناشرون</a>
-      <span style={{ flex: 1 }} />
-      <a href="/">الرئيسية</a>
-      <a href="/staff/logout">تسجيل خروج</a>
+    <nav
+      style={{
+        display: "flex",
+        gap: 4,
+        marginBottom: "1.5rem",
+        backgroundColor: "#1C1712",
+        borderRadius: 8,
+        padding: 6,
+        overflowX: "auto",
+      }}
+    >
+      {navLink("/staff/books", false, <BookIcon />, "الكتب")}
+      {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
+      {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
+      {navLink("/staff/intake", true, <CameraIcon />, "تصوير")}
+      <span style={{ flex: 1, minWidth: 8 }} />
+      {navLink("/", false, <HomeIcon />, "الرئيسية")}
+      {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}
     </nav>
   );
 }
@@ -95,7 +133,7 @@ export default async function IntakeReviewPage({
 
   if (!submission) {
     return (
-      <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <main style={{ padding: "1.25rem", fontFamily: "sans-serif" }}>
         <p>لم يتم العثور على هذا الطلب.</p>
         <a href="/staff/intake">العودة</a>
       </main>
@@ -105,44 +143,29 @@ export default async function IntakeReviewPage({
   const suggested = submission.suggested_data || {};
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto" }}>
+    <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <StaffNav />
-      <h1>مراجعة البيانات المقترحة</h1>
-      <p style={{ color: "#666" }}>
-        راجع ما استخرجه النظام من الصورة وصحّح أي خطأ قبل الحفظ. لن يُحفظ
-        شيء تلقائيًا.
+      <h1 style={{ fontSize: 20 }}>مراجعة البيانات المقترحة</h1>
+      <p style={{ color: "#5C5040", fontSize: 13 }}>
+        راجع ما استخرجه النظام من الصورة وصحّح أي خطأ قبل الحفظ. لن يُحفظ شيء تلقائيًا.
       </p>
-      <form action={confirmIntake} style={{ display: "grid", gap: "1rem", marginTop: "1.5rem" }}>
+      <form action={confirmIntake} style={{ display: "grid", gap: "0.85rem", backgroundColor: "#F6F0E2", borderRadius: 10, padding: "1.25rem" }}>
         <input type="hidden" name="submission_id" value={submission.id} />
-        <label>
+        <label style={{ fontSize: 13 }}>
           العنوان *
-          <input
-            name="title"
-            defaultValue={suggested.title || ""}
-            required
-            style={{ width: "100%", padding: 8 }}
-          />
+          <input name="title" defaultValue={suggested.title || ""} required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           المؤلف *
-          <input
-            name="author"
-            defaultValue={suggested.author || ""}
-            required
-            style={{ width: "100%", padding: 8 }}
-          />
+          <input name="author" defaultValue={suggested.author || ""} required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           الناشر
-          <input
-            name="publisher"
-            defaultValue={suggested.publisher || ""}
-            style={{ width: "100%", padding: 8 }}
-          />
+          <input name="publisher" defaultValue={suggested.publisher || ""} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           التصنيف *
-          <select name="category_id" required style={{ width: "100%", padding: 8 }}>
+          <select name="category_id" required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}>
             <option value="">— اختر —</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -151,22 +174,19 @@ export default async function IntakeReviewPage({
             ))}
           </select>
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           الكمية
-          <input
-            name="quantity"
-            type="number"
-            defaultValue={1}
-            min={1}
-            style={{ width: "100%", padding: 8 }}
-          />
+          <input name="quantity" type="number" defaultValue={1} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <button type="submit" style={{ padding: "10px 24px", cursor: "pointer" }}>
+        <button
+          type="submit"
+          style={{ padding: "10px 20px", backgroundColor: "#9B2226", color: "#EDE3D0", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 14 }}
+        >
           تأكيد وحفظ
         </button>
       </form>
-      <p style={{ marginTop: "1rem" }}>
-        <a href="/staff/intake">إلغاء وتصوير كتاب آخر</a>
+      <p style={{ marginTop: "1rem", fontSize: 13 }}>
+        <a href="/staff/intake" style={{ color: "#9B2226" }}>إلغاء وتصوير كتاب آخر</a>
       </p>
     </main>
   );
