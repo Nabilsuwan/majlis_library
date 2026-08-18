@@ -1,8 +1,7 @@
-export const dynamic = "force-dynamic";
-
 import { pool } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { findOrCreateAuthor, findOrCreatePublisher } from "@/lib/staff-helpers";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
 
 async function getBook(id: string) {
   const { rows } = await pool.query(
@@ -57,7 +56,6 @@ async function updateBook(formData: FormData) {
     [title, publisherId, categoryId, quantity, id]
   );
 
-  // Replace the primary author link with whatever was typed in the form.
   await pool.query(
     "DELETE FROM book_authors WHERE book_id = $1 AND role = 'author'",
     [id]
@@ -71,6 +69,56 @@ async function updateBook(formData: FormData) {
   redirect("/staff/books");
 }
 
+function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
+  return (
+    
+    <a
+      href={href}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        padding: "8px 10px",
+        borderRadius: 6,
+        backgroundColor: active ? "#9B2226" : "transparent",
+        color: active ? "#EDE3D0" : "#C9BFA8",
+        textDecoration: "none",
+        minWidth: 56,
+        flexShrink: 0,
+        fontSize: 11,
+      }}
+    >
+      {icon}
+      {label}
+    </a>
+  );
+}
+
+function StaffNav() {
+  return (
+    <nav
+      style={{
+        display: "flex",
+        gap: 4,
+        marginBottom: "1.5rem",
+        backgroundColor: "#1C1712",
+        borderRadius: 8,
+        padding: 6,
+        overflowX: "auto",
+      }}
+    >
+      {navLink("/staff/books", true, <BookIcon />, "الكتب")}
+      {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
+      {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
+      {navLink("/staff/intake", false, <CameraIcon />, "تصوير")}
+      <span style={{ flex: 1, minWidth: 8 }} />
+      {navLink("/", false, <HomeIcon />, "الرئيسية")}
+      {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}
+    </nav>
+  );
+}
+
 export default async function EditBookPage({
   params,
 }: {
@@ -81,7 +129,7 @@ export default async function EditBookPage({
 
   if (!book) {
     return (
-      <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <main style={{ padding: "1.25rem", fontFamily: "sans-serif" }}>
         <p>الكتاب غير موجود.</p>
         <a href="/staff/books">العودة إلى قائمة الكتب</a>
       </main>
@@ -89,25 +137,26 @@ export default async function EditBookPage({
   }
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto" }}>
-      <h1>تعديل كتاب</h1>
-      <form action={updateBook} style={{ display: "grid", gap: "1rem" }}>
+    <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
+      <StaffNav />
+      <h1 style={{ fontSize: 20 }}>تعديل كتاب</h1>
+      <form action={updateBook} style={{ display: "grid", gap: "0.85rem", backgroundColor: "#F6F0E2", borderRadius: 10, padding: "1.25rem" }}>
         <input type="hidden" name="id" value={book.id} />
-        <label>
+        <label style={{ fontSize: 13 }}>
           العنوان *
-          <input name="title" defaultValue={book.title} required style={{ width: "100%", padding: 8 }} />
+          <input name="title" defaultValue={book.title} required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           المؤلف *
-          <input name="author" defaultValue={book.author_name} required style={{ width: "100%", padding: 8 }} />
+          <input name="author" defaultValue={book.author_name} required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           الناشر
-          <input name="publisher" defaultValue={book.publisher_name || ""} style={{ width: "100%", padding: 8 }} />
+          <input name="publisher" defaultValue={book.publisher_name || ""} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           التصنيف *
-          <select name="category_id" defaultValue={book.category_id || ""} required style={{ width: "100%", padding: 8 }}>
+          <select name="category_id" defaultValue={book.category_id || ""} required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}>
             <option value="">— اختر —</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -116,16 +165,19 @@ export default async function EditBookPage({
             ))}
           </select>
         </label>
-        <label>
+        <label style={{ fontSize: 13 }}>
           الكمية
-          <input name="quantity" type="number" defaultValue={book.quantity} min={1} style={{ width: "100%", padding: 8 }} />
+          <input name="quantity" type="number" defaultValue={book.quantity} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
-        <button type="submit" style={{ padding: "10px 20px", cursor: "pointer" }}>
+        <button
+          type="submit"
+          style={{ padding: "10px 20px", backgroundColor: "#9B2226", color: "#EDE3D0", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 14 }}
+        >
           حفظ التعديلات
         </button>
       </form>
-      <p style={{ marginTop: "1rem" }}>
-        <a href="/staff/books">إلغاء والعودة</a>
+      <p style={{ marginTop: "1rem", fontSize: 13 }}>
+        <a href="/staff/books" style={{ color: "#9B2226" }}>إلغاء والعودة</a>
       </p>
     </main>
   );
