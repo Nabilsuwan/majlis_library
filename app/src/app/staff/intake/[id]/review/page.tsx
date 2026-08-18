@@ -8,7 +8,7 @@ import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } f
 
 async function getSubmission(id: string) {
   const { rows } = await pool.query(
-    "SELECT id, suggested_data, status FROM intake_submissions WHERE id = $1",
+    "SELECT id, suggested_data, cover_image_url, status FROM intake_submissions WHERE id = $1",
     [id]
   );
   return rows[0] || null;
@@ -25,6 +25,7 @@ async function confirmIntake(formData: FormData) {
   "use server";
 
   const submissionId = formData.get("submission_id") as string;
+  const coverImageUrl = formData.get("cover_image_url") as string;
   const title = (formData.get("title") as string)?.trim();
   const authorName = (formData.get("author") as string)?.trim();
   const publisherName = (formData.get("publisher") as string)?.trim();
@@ -44,9 +45,9 @@ async function confirmIntake(formData: FormData) {
   const slug = slugify(title, bookId);
 
   await pool.query(
-    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status)
-     VALUES ($1, $2, $3, $4, $5, $6, 'published')`,
-    [bookId, title, slug, publisherId, categoryId, quantity]
+    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, cover_image_url)
+     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7)`,
+    [bookId, title, slug, publisherId, categoryId, quantity, coverImageUrl || null]
   );
 
   await pool.query(
@@ -149,8 +150,25 @@ export default async function IntakeReviewPage({
       <p style={{ color: "#5C5040", fontSize: 13 }}>
         راجع ما استخرجه النظام من الصورة وصحّح أي خطأ قبل الحفظ. لن يُحفظ شيء تلقائيًا.
       </p>
+
+      {submission.cover_image_url && (
+        <img
+          src={submission.cover_image_url}
+          alt="غلاف الكتاب"
+          style={{
+            width: "100%",
+            maxWidth: 220,
+            display: "block",
+            margin: "1rem auto",
+            borderRadius: 8,
+            border: "1px solid #C9BFA8",
+          }}
+        />
+      )}
+
       <form action={confirmIntake} style={{ display: "grid", gap: "0.85rem", backgroundColor: "#F6F0E2", borderRadius: 10, padding: "1.25rem" }}>
         <input type="hidden" name="submission_id" value={submission.id} />
+        <input type="hidden" name="cover_image_url" value={submission.cover_image_url || ""} />
         <label style={{ fontSize: 13 }}>
           العنوان *
           <input name="title" defaultValue={suggested.title || ""} required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />

@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 async function getBook(slug: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.title, b.subtitle, b.edition_number, b.page_count, b.slug,
+    SELECT b.id, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url,
            c.name AS category_name,
            p.name AS publisher_name,
            COALESCE(string_agg(a.canonical_name, '، ' ORDER BY ba.sort_order), '') AS authors
@@ -74,7 +74,7 @@ export default async function BookDetailPage({
   if (!book) notFound();
 
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "3rem 1.5rem 6rem" }}>
+    <main style={{ maxWidth: 640, margin: "0 auto", padding: "1.5rem 1.5rem 6rem" }}>
       <p style={{ fontFamily: "var(--font-ui), sans-serif", fontSize: "0.85rem" }}>
         <a href="/" style={{ color: "#9B2226", textDecoration: "none" }}>
           المجلس
@@ -88,7 +88,22 @@ export default async function BookDetailPage({
         </a>
       </p>
 
-      <h1 style={{ fontSize: "2.3rem", margin: "1rem 0 0", lineHeight: 1.3 }}>
+      {book.cover_image_url && (
+        <img
+          src={book.cover_image_url}
+          alt={book.title}
+          style={{
+            width: "100%",
+            maxWidth: 260,
+            display: "block",
+            margin: "1.5rem auto 0",
+            borderRadius: 8,
+            border: "1px solid #C9BFA8",
+          }}
+        />
+      )}
+
+      <h1 style={{ fontSize: "2.3rem", margin: "1.25rem 0 0", lineHeight: 1.3, textAlign: book.cover_image_url ? "center" : "left" }}>
         {book.title}
       </h1>
       {book.subtitle && (
@@ -97,6 +112,7 @@ export default async function BookDetailPage({
             fontSize: "1.2rem",
             color: "#5C5040",
             margin: "0.5rem 0 0",
+            textAlign: book.cover_image_url ? "center" : "left",
           }}
         >
           {book.subtitle}

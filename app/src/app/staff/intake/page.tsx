@@ -2,6 +2,7 @@ import { pool } from "@/lib/db";
 import { cookies } from "next/headers";
 import { verifySessionToken } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { put } from "@vercel/blob";
 import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
 
 async function analyzePhoto(formData: FormData) {
@@ -15,6 +16,12 @@ async function analyzePhoto(formData: FormData) {
   const bytes = await file.arrayBuffer();
   const base64 = Buffer.from(bytes).toString("base64");
   const mediaType = file.type || "image/jpeg";
+
+  // Upload the photo to permanent storage so it can be shown on the
+  // book's page later, alongside sending it to Claude for reading.
+  const blob = await put(`covers/${Date.now()}-${file.name}`, file, {
+    access: "public",
+  });
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -71,10 +78,10 @@ async function analyzePhoto(formData: FormData) {
   const session = token ? await verifySessionToken(token) : null;
 
   const result = await pool.query(
-    `INSERT INTO intake_submissions (suggested_data, status, submitted_by)
-     VALUES ($1, 'pending_review', $2)
+    `INSERT INTO intake_submissions (suggested_data, cover_image_url, status, submitted_by)
+     VALUES ($1, $2, 'pending_review', $3)
      RETURNING id`,
-    [JSON.stringify(suggested), session?.staffId || null]
+    [JSON.stringify(suggested), blob.url, session?.staffId || null]
   );
 
   redirect(`/staff/intake/${result.rows[0].id}/review`);
