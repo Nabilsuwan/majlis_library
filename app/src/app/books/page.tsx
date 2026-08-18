@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { pool } from "@/lib/db";
+import { SearchIcon, FeatherIcon, BuildingIcon } from "@/lib/icons";
 
 async function getCategories() {
   const { rows } = await pool.query(
@@ -67,47 +68,48 @@ export default async function BooksPage({
   ]);
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "3rem 1.5rem 6rem" }}>
+    <main style={{ maxWidth: 760, margin: "0 auto", padding: "1.5rem 1.25rem 4rem", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <p style={{ fontFamily: "var(--font-ui), sans-serif", fontSize: "0.85rem" }}>
         <a href="/" style={{ color: "#9B2226", textDecoration: "none" }}>
           المجلس
         </a>
         <span style={{ color: "#8C7A5E" }}> / تصفح الكتب</span>
       </p>
-      <h1 style={{ fontSize: "2.1rem", margin: "0.5rem 0 2rem" }}>
+      <h1 style={{ fontSize: "1.7rem", margin: "0.5rem 0 1.25rem" }}>
         فهرس المكتبة
       </h1>
 
       <form
         style={{
           display: "flex",
-          gap: "0.75rem",
-          marginBottom: "2rem",
+          gap: "0.6rem",
+          marginBottom: "1.5rem",
           fontFamily: "var(--font-ui), sans-serif",
           flexWrap: "wrap",
+          alignItems: "center",
+          backgroundColor: "#F6F0E2",
+          borderRadius: 10,
+          padding: "0.75rem",
         }}
       >
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="ابحث عن كتاب..."
-          style={{
-            flex: 1,
-            minWidth: 200,
-            padding: "0.7rem 1rem",
-            border: "1px solid #C9BFA8",
-            backgroundColor: "#F6F0E2",
-            borderRadius: 2,
-          }}
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 180, backgroundColor: "#fff", border: "1px solid #C9BFA8", borderRadius: 6, padding: "0.5rem 0.75rem" }}>
+          <SearchIcon size={16} />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="ابحث عن كتاب..."
+            style={{ border: "none", outline: "none", flex: 1, fontSize: 14, background: "transparent" }}
+          />
+        </div>
         <select
           name="category"
           defaultValue={categoryId}
           style={{
-            padding: "0.7rem 1rem",
+            padding: "0.55rem 0.75rem",
             border: "1px solid #C9BFA8",
-            backgroundColor: "#F6F0E2",
-            borderRadius: 2,
+            backgroundColor: "#fff",
+            borderRadius: 6,
+            fontSize: 14,
           }}
         >
           <option value="">كل التصنيفات</option>
@@ -120,13 +122,15 @@ export default async function BooksPage({
         <button
           type="submit"
           style={{
-            padding: "0.7rem 1.5rem",
-            backgroundColor: "#1C1712",
+            padding: "0.55rem 1.25rem",
+            backgroundColor: "#9B2226",
             color: "#EDE3D0",
             border: "none",
-            borderRadius: 2,
+            borderRadius: 6,
             fontFamily: "var(--font-ui), sans-serif",
             fontWeight: 600,
+            fontSize: 14,
+            cursor: "pointer",
           }}
         >
           بحث
@@ -138,13 +142,13 @@ export default async function BooksPage({
           fontFamily: "var(--font-ui), sans-serif",
           fontSize: "0.8rem",
           color: "#8C7A5E",
-          marginBottom: "1rem",
+          marginBottom: "0.75rem",
         }}
       >
         {books.length} نتيجة
       </p>
 
-      <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {books.map((b) => (
           
           <a
@@ -152,36 +156,29 @@ export default async function BooksPage({
             href={`/books/${b.slug}`}
             style={{
               display: "block",
-              padding: "1.25rem 0",
-              borderTop: "1px solid #C9BFA8",
+              padding: "1rem 1.1rem",
+              backgroundColor: "#F6F0E2",
+              borderRadius: 10,
               textDecoration: "none",
               color: "inherit",
             }}
           >
-            <div style={{ fontSize: "1.3rem", fontWeight: 700 }}>
-              {b.title}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+              <div style={{ fontSize: "1.15rem", fontWeight: 700 }}>{b.title}</div>
+              {b.category_name && (
+                <span style={{ backgroundColor: "#9B2226", color: "#F6E9E9", fontSize: 11, padding: "3px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                  {b.category_name}
+                </span>
+              )}
             </div>
-            <div
-              style={{
-                fontFamily: "var(--font-ui), sans-serif",
-                fontSize: "0.85rem",
-                color: "#5C5040",
-                marginTop: "0.35rem",
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontFamily: "var(--font-ui), sans-serif", fontSize: "0.82rem", color: "#5C5040" }}>
+              <FeatherIcon />
               {b.authors || "مؤلف غير معروف"}
-              {b.publisher_name ? ` — ${b.publisher_name}` : ""}
             </div>
-            {b.category_name && (
-              <div
-                style={{
-                  fontFamily: "var(--font-ui), sans-serif",
-                  fontSize: "0.75rem",
-                  color: "#9B2226",
-                  marginTop: "0.25rem",
-                }}
-              >
-                {b.category_name}
+            {b.publisher_name && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, fontFamily: "var(--font-ui), sans-serif", fontSize: "0.82rem", color: "#5C5040" }}>
+                <BuildingIcon size={14} />
+                {b.publisher_name}
               </div>
             )}
           </a>
