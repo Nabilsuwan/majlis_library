@@ -121,7 +121,6 @@ function StaffNav() {
       {navLink("/staff/books", true, <BookIcon />, "الكتب")}
       {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
       {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
-      {navLink("/staff/intake", false, <CameraIcon />, "تصوير")}
       <span style={{ flex: 1, minWidth: 8 }} />
       {navLink("/", false, <HomeIcon />, "الرئيسية")}
       {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}
@@ -141,7 +140,13 @@ export default async function StaffBooksPage() {
       </div>
 
       <section style={{ margin: "0 0 1.5rem", padding: "1.25rem", backgroundColor: "#F6F0E2", borderRadius: 10 }}>
-        <h2 style={{ fontSize: 16, marginTop: 0 }}>إضافة كتاب جديد</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <h2 style={{ fontSize: 16, margin: 0 }}>إضافة كتاب جديد</h2>
+          <a href="/staff/intake" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "#9B2226", textDecoration: "none" }}>
+            <CameraIcon size={16} />
+            تصوير
+          </a>
+        </div>
         <form action={addBook} style={{ display: "grid", gap: "0.85rem" }}>
           <label style={{ fontSize: 13 }}>
             العنوان *
