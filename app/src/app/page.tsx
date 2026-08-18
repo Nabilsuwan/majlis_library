@@ -1,3 +1,5 @@
+import { LibraryIcon, BookIcon, UserIcon } from "@/lib/icons";
+
 export default function Home() {
   return (
     <main
@@ -21,11 +23,12 @@ export default function Home() {
           marginBottom: "1.5rem",
         }}
       />
+      <LibraryIcon size={40} />
       <h1
         style={{
           fontSize: "3rem",
           fontWeight: 700,
-          margin: 0,
+          margin: "0.75rem 0 0",
           letterSpacing: "0.02em",
         }}
       >
@@ -48,37 +51,50 @@ export default function Home() {
       <div
         style={{
           display: "flex",
-          gap: "1rem",
+          flexDirection: "column",
+          gap: "0.75rem",
           marginTop: "2.5rem",
           fontFamily: "var(--font-ui), sans-serif",
+          width: "100%",
+          maxWidth: 260,
         }}
       >
         
         <a
           href="/books"
           style={{
-            padding: "0.85rem 2rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            padding: "0.85rem 1.5rem",
             backgroundColor: "#9B2226",
             color: "#EDE3D0",
             textDecoration: "none",
             fontWeight: 600,
-            borderRadius: 2,
+            borderRadius: 6,
           }}
         >
-          تصفح الكتب
+          <BookIcon size={18} />
+          البحث بالمكتبة
         </a>
         
         <a
           href="/staff/login"
           style={{
-            padding: "0.85rem 2rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            padding: "0.85rem 1.5rem",
             border: "1px solid #C9BFA8",
             color: "#C9BFA8",
             textDecoration: "none",
             fontWeight: 600,
-            borderRadius: 2,
+            borderRadius: 6,
           }}
         >
+          <UserIcon size={18} />
           دخول الموظفين
         </a>
       </div>

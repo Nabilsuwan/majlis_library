@@ -101,3 +101,22 @@ export function PlusIcon({ size = 16 }: { size?: number }) {
     </svg>
   );
 }
+
+export function LibraryIcon({ size = 40 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18" />
+      <path d="M4 21V10M8 21V10M12 21V10M16 21V10M20 21V10" />
+      <path d="M2 10l10-6 10 6" />
+    </svg>
+  );
+}
+
+export function UserIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
+    </svg>
+  );
+}
