@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 async function getBook(slug: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url,
+    SELECT b.id, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url, b.proofreader_name,
            c.name AS category_name,
            p.name AS publisher_name,
            COALESCE(string_agg(a.canonical_name, '، ' ORDER BY ba.sort_order), '') AS authors
@@ -147,6 +147,9 @@ export default async function BookDetailPage({
           )}
           {book.page_count && (
             <ColophonRow label="الصفحات" value={String(book.page_count)} />
+          )}
+          {book.proofreader_name && (
+            <ColophonRow label="المدقق" value={book.proofreader_name} />
           )}
         </dl>
       </div>
