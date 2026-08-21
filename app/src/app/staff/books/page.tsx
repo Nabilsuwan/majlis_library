@@ -4,7 +4,8 @@ import { pool } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { findOrCreateAuthor, findOrCreatePublisher, slugify } from "@/lib/staff-helpers";
 import { randomUUID } from "crypto";
-import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, EditIcon, TrashIcon, FeatherIcon, PlusIcon } from "@/lib/icons";
+import DeleteBookButton from "@/components/DeleteBookButton";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, EditIcon, FeatherIcon, PlusIcon } from "@/lib/icons";
 
 async function getBooks() {
   const { rows } = await pool.query(`
@@ -234,13 +235,7 @@ export default async function StaffBooksPage() {
                     <EditIcon />
                     تعديل
                   </a>
-                  <form action={deleteBook}>
-                    <input type="hidden" name="id" value={b.id} />
-                    <button type="submit" style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "#9B2226", fontSize: 13, cursor: "pointer", padding: 0 }}>
-                      <TrashIcon />
-                      حذف
-                    </button>
-                  </form>
+                  <DeleteBookButton bookId={b.id} deleteAction={deleteBook} />
                 </div>
               </div>
             ))}
