@@ -17,11 +17,27 @@ async function analyzePhoto(formData: FormData) {
   const base64 = Buffer.from(bytes).toString("base64");
   const mediaType = file.type || "image/jpeg";
 
-  // Upload the photo to permanent storage so it can be shown on the
-  // book's page later, alongside sending it to Claude for reading.
   const blob = await put(`covers/${Date.now()}-${file.name}`, file, {
     access: "public",
   });
+
+  const promptText =
+    "هذه صورة غلاف كتاب عربي تراثي أو علمي. اقرأ النص بعناية فائقة " +
+    "حتى لو كان بخط مزخرف أو فني، فبعض الأغلفة تستخدم خطوطًا زخرفية " +
+    "يصعب قراءتها.\n\n" +
+    "استخرج ما يلي:\n" +
+    "- title: العنوان الكامل للكتاب كما هو مكتوب.\n" +
+    "- author: اسم المؤلف الأصلي للكتاب.\n" +
+    "- publisher: اسم دار النشر.\n" +
+    "- edition: رقم الطبعة (رقم فقط، بدون كلمة طبعة).\n" +
+    "- proofreader: اسم المحقق، وهو الشخص الذي قام بتحقيق أو مراجعة " +
+    'أو دراسة النص، ويظهر عادة بعد عبارة مثل "تحقيق:" أو ' +
+    '"دراسة وتحقيق:" أو "حققه:". هذا مختلف عن المؤلف الأصلي.\n\n' +
+    "أعد النتيجة بصيغة JSON فقط، بدون أي نص أو شرح إضافي وبدون " +
+    'علامات markdown: {"title": "", "author": "", "publisher": "", ' +
+    '"edition": "", "proofreader": ""}. ' +
+    "إذا كان أي حقل غير واضح تمامًا في الصورة، اترك قيمته فارغة " +
+    '"" بدلاً من التخمين.';
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -31,8 +47,8 @@ async function analyzePhoto(formData: FormData) {
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 500,
+      model: "claude-sonnet-5",
+      max_tokens: 600,
       messages: [
         {
           role: "user",
@@ -43,13 +59,7 @@ async function analyzePhoto(formData: FormData) {
             },
             {
               type: "text",
-              text:
-                "هذه صورة غلاف كتاب عربي. استخرج المعلومات التالية وأعدها " +
-                "بصيغة JSON فقط، بدون أي نص أو شرح إضافي وبدون علامات " +
-                "markdown: " +
-                '{"title": "عنوان الكتاب", "author": "اسم المؤلف", ' +
-                '"publisher": "اسم الناشر", "edition": "رقم الطبعة", "proofreader": "اسم المحقق"}. ' +
-                'إذا لم تجد معلومة معينة استخدم قيمة فارغة "".',
+              text: promptText,
             },
           ],
         },
