@@ -40,6 +40,7 @@ async function addBook(formData: FormData) {
   const title = (formData.get("title") as string)?.trim();
   const authorName = (formData.get("author") as string)?.trim();
   const publisherName = (formData.get("publisher") as string)?.trim();
+  const proofreaderName = (formData.get("proofreader") as string)?.trim();
   const categoryId = formData.get("category_id") as string;
   const quantity = Number(formData.get("quantity")) || 1;
 
@@ -56,10 +57,10 @@ async function addBook(formData: FormData) {
   const slug = slugify(title, bookId);
 
   const book = await pool.query(
-    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status)
-     VALUES ($1, $2, $3, $4, $5, $6, 'published')
+    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, proofreader_name)
+     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7)
      RETURNING id`,
-    [bookId, title, slug, publisherId, categoryId, quantity]
+    [bookId, title, slug, publisherId, categoryId, quantity, proofreaderName || null]
   );
 
   await pool.query(
@@ -165,6 +166,10 @@ export default async function StaffBooksPage() {
           <label style={{ fontSize: 13 }}>
             الناشر
             <input name="publisher" style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
+          </label>
+          <label style={{ fontSize: 13 }}>
+            المحقق
+            <input name="proofreader" style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
           </label>
           <label style={{ fontSize: 13 }}>
             التصنيف *

@@ -6,7 +6,7 @@ import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } f
 async function getBook(id: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.title, b.quantity, b.category_id,
+    SELECT b.id, b.title, b.quantity, b.category_id, b.proofreader_name,
            p.name AS publisher_name,
            COALESCE(
              (SELECT a.canonical_name FROM book_authors ba
@@ -38,6 +38,7 @@ async function updateBook(formData: FormData) {
   const title = (formData.get("title") as string)?.trim();
   const authorName = (formData.get("author") as string)?.trim();
   const publisherName = (formData.get("publisher") as string)?.trim();
+  const proofreaderName = (formData.get("proofreader") as string)?.trim();
   const categoryId = formData.get("category_id") as string;
   const quantity = Number(formData.get("quantity")) || 1;
 
@@ -52,8 +53,8 @@ async function updateBook(formData: FormData) {
 
   await pool.query(
     `UPDATE books SET title = $1, publisher_id = $2, category_id = $3,
-     quantity = $4, updated_at = now() WHERE id = $5`,
-    [title, publisherId, categoryId, quantity, id]
+     quantity = $4, proofreader_name = $5, updated_at = now() WHERE id = $6`,
+    [title, publisherId, categoryId, quantity, proofreaderName || null, id]
   );
 
   await pool.query(
@@ -153,6 +154,10 @@ export default async function EditBookPage({
         <label style={{ fontSize: 13 }}>
           الناشر
           <input name="publisher" defaultValue={book.publisher_name || ""} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
+        </label>
+        <label style={{ fontSize: 13 }}>
+          المحقق
+          <input name="proofreader" defaultValue={book.proofreader_name || ""} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
         <label style={{ fontSize: 13 }}>
           التصنيف *
