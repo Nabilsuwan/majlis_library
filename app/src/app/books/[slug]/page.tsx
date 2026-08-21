@@ -149,7 +149,7 @@ export default async function BookDetailPage({
             <ColophonRow label="الصفحات" value={String(book.page_count)} />
           )}
           {book.proofreader_name && (
-            <ColophonRow label="المدقق" value={book.proofreader_name} />
+            <ColophonRow label="المحقق" value={book.proofreader_name} />
           )}
         </dl>
       </div>
