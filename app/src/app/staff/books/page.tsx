@@ -74,6 +74,11 @@ async function addBook(formData: FormData) {
 async function deleteBook(formData: FormData) {
   "use server";
   const id = formData.get("id") as string;
+  await pool.query(
+    "UPDATE intake_submissions SET resulting_book_id = NULL WHERE resulting_book_id = $1",
+    [id]
+  );
+  await pool.query("DELETE FROM book_authors WHERE book_id = $1", [id]);
   await pool.query("DELETE FROM books WHERE id = $1", [id]);
   revalidatePath("/staff/books");
   revalidatePath("/books");
