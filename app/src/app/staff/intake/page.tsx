@@ -48,7 +48,7 @@ async function analyzePhoto(formData: FormData) {
                 "بصيغة JSON فقط، بدون أي نص أو شرح إضافي وبدون علامات " +
                 "markdown: " +
                 '{"title": "عنوان الكتاب", "author": "اسم المؤلف", ' +
-                '"publisher": "اسم الناشر", "edition": "رقم الطبعة"}. ' +
+                '"publisher": "اسم الناشر", "edition": "رقم الطبعة", "proofreader": "اسم المحقق"}. ' +
                 'إذا لم تجد معلومة معينة استخدم قيمة فارغة "".',
             },
           ],
@@ -70,7 +70,7 @@ async function analyzePhoto(formData: FormData) {
   try {
     suggested = JSON.parse(rawText);
   } catch {
-    suggested = { title: "", author: "", publisher: "", edition: "" };
+    suggested = { title: "", author: "", publisher: "", edition: "", proofreader: "" };
   }
 
   const cookieStore = await cookies();
