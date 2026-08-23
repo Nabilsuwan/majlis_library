@@ -1,101 +1,9 @@
-import { pool } from "@/lib/db";
-import { cookies } from "next/headers";
-import { verifySessionToken } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { put } from "@vercel/blob";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
-
-async function analyzePhoto(formData: FormData) {
-  "use server";
-
-  const file = formData.get("photo") as File | null;
-  if (!file || file.size === 0) {
-    throw new Error("الرجاء اختيار صورة");
-  }
-
-  const bytes = await file.arrayBuffer();
-  const base64 = Buffer.from(bytes).toString("base64");
-  const mediaType = file.type || "image/jpeg";
-
-  const blob = await put(`covers/${Date.now()}-${file.name}`, file, {
-    access: "public",
-  });
-
-  const promptText =
-    "هذه صورة غلاف كتاب عربي تراثي أو علمي. اقرأ النص بعناية فائقة " +
-    "حتى لو كان بخط مزخرف أو فني، فبعض الأغلفة تستخدم خطوطًا زخرفية " +
-    "يصعب قراءتها.\n\n" +
-    "استخرج ما يلي:\n" +
-    "- title: العنوان الكامل للكتاب كما هو مكتوب.\n" +
-    "- author: اسم المؤلف الأصلي للكتاب.\n" +
-    "- publisher: اسم دار النشر.\n" +
-    "- edition: رقم الطبعة (رقم فقط، بدون كلمة طبعة).\n" +
-    "- proofreader: اسم المحقق، وهو الشخص الذي قام بتحقيق أو مراجعة " +
-    'أو دراسة النص، ويظهر عادة بعد عبارة مثل "تحقيق:" أو ' +
-    '"دراسة وتحقيق:" أو "حققه:". هذا مختلف عن المؤلف الأصلي.\n\n' +
-    "أعد النتيجة بصيغة JSON فقط، بدون أي نص أو شرح إضافي وبدون " +
-    'علامات markdown: {"title": "", "author": "", "publisher": "", ' +
-    '"edition": "", "proofreader": ""}. ' +
-    "إذا كان أي حقل غير واضح تمامًا في الصورة، اترك قيمته فارغة " +
-    '"" بدلاً من التخمين.';
-
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": process.env.ANTHROPIC_API_KEY || "",
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 600,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: { type: "base64", media_type: mediaType, data: base64 },
-            },
-            {
-              type: "text",
-              text: promptText,
-            },
-          ],
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error("فشل تحليل الصورة: " + errText.slice(0, 200));
-  }
-
-  const data = await response.json();
-  let rawText = data.content?.[0]?.text || "{}";
-  rawText = rawText.replace(/```json|```/g, "").trim();
-
-  let suggested;
-  try {
-    suggested = JSON.parse(rawText);
-  } catch {
-    suggested = { title: "", author: "", publisher: "", edition: "", proofreader: "" };
-  }
-
-  const cookieStore = await cookies();
-  const token = cookieStore.get("majlis_session")?.value;
-  const session = token ? await verifySessionToken(token) : null;
-
-  const result = await pool.query(
-    `INSERT INTO intake_submissions (suggested_data, cover_image_url, status, submitted_by)
-     VALUES ($1, $2, 'pending_review', $3)
-     RETURNING id`,
-    [JSON.stringify(suggested), blob.url, session?.staffId || null]
-  );
-
-  redirect(`/staff/intake/${result.rows[0].id}/review`);
-}
 
 function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
   return (
@@ -148,6 +56,48 @@ function StaffNav() {
 }
 
 export default function IntakePage() {
+  const router = useRouter();
+  const [status, setStatus] = useState<"idle" | "uploading" | "analyzing">("idle");
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+
+    const input = e.currentTarget.elements.namedItem("photo") as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      setError("الرجاء اختيار صورة");
+      return;
+    }
+
+    try {
+      setStatus("uploading");
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/intake/upload",
+      });
+
+      setStatus("analyzing");
+      const res = await fetch("/api/intake/analyze", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ blobUrl: blob.url }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "فشل تحليل الصورة");
+      }
+
+      const data = await res.json();
+      router.push(`/staff/intake/${data.submissionId}/review`);
+    } catch (err) {
+      setStatus("idle");
+      setError((err as Error).message || "حدث خطأ غير متوقع");
+    }
+  }
+
   return (
     <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <StaffNav />
@@ -156,25 +106,30 @@ export default function IntakePage() {
         صوّر غلاف الكتاب، وسيحاول النظام قراءة العنوان والمؤلف والناشر
         تلقائيًا. ستتمكن من مراجعة النتيجة وتصحيحها قبل الحفظ.
       </p>
-      <form action={analyzePhoto} style={{ marginTop: "1.25rem", backgroundColor: "#F6F0E2", borderRadius: 10, padding: "1.25rem" }}>
+      <form onSubmit={handleSubmit} style={{ marginTop: "1.25rem", backgroundColor: "#F6F0E2", borderRadius: 10, padding: "1.25rem" }}>
         <input
           type="file"
           name="photo"
           accept="image/*"
           capture="environment"
           required
+          disabled={status !== "idle"}
           style={{ display: "block", marginBottom: "1rem", width: "100%" }}
         />
+        {error && (
+          <p style={{ color: "#9B2226", fontSize: 13, marginBottom: "1rem" }}>{error}</p>
+        )}
         <button
           type="submit"
+          disabled={status !== "idle"}
           style={{
             width: "100%",
             padding: "12px 24px",
-            backgroundColor: "#9B2226",
+            backgroundColor: status !== "idle" ? "#C9BFA8" : "#9B2226",
             color: "#EDE3D0",
             border: "none",
             borderRadius: 6,
-            cursor: "pointer",
+            cursor: status !== "idle" ? "default" : "pointer",
             fontSize: 14,
             display: "flex",
             alignItems: "center",
@@ -183,7 +138,9 @@ export default function IntakePage() {
           }}
         >
           <CameraIcon size={16} />
-          تحليل الصورة
+          {status === "idle" && "تحليل الصورة"}
+          {status === "uploading" && "جارٍ رفع الصورة..."}
+          {status === "analyzing" && "جارٍ تحليل الصورة..."}
         </button>
       </form>
     </main>
