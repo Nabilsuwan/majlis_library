@@ -33,6 +33,8 @@ export default function RootLayout({
           color: "#1C1712",
         }}
       >
+        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+        <script dangerouslySetInnerHTML={{ __html: "eruda.init();" }} />
         {children}
       </body>
     </html>
