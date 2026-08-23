@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" className={`${amiri.variable} ${plexSans.variable}`}>
+    <html lang="ar" dir="rtl" className={`${amiri.variable} ${plexSans.variable}`}><head><script src="https://cdn.jsdelivr.net/npm/eruda"></script><script dangerouslySetInnerHTML={{ __html: "eruda.init();" }} /></head>
       <body
         style={{
           margin: 0,
@@ -33,8 +33,6 @@ export default function RootLayout({
           color: "#1C1712",
         }}
       >
-        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-        <script dangerouslySetInnerHTML={{ __html: "eruda.init();" }} />
         {children}
       </body>
     </html>
