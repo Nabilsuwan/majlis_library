@@ -30,6 +30,7 @@ async function confirmIntake(formData: FormData) {
   const authorName = (formData.get("author") as string)?.trim();
   const publisherName = (formData.get("publisher") as string)?.trim();
   const proofreaderName = (formData.get("proofreader") as string)?.trim();
+  const editionNumber = formData.get("edition") ? Number(formData.get("edition")) : null;
   const categoryId = formData.get("category_id") as string;
   const quantity = Number(formData.get("quantity")) || 1;
 
@@ -46,9 +47,9 @@ async function confirmIntake(formData: FormData) {
   const slug = slugify(title, bookId);
 
   await pool.query(
-    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, cover_image_url, proofreader_name)
-     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8)`,
-    [bookId, title, slug, publisherId, categoryId, quantity, coverImageUrl || null, proofreaderName || null]
+    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, cover_image_url, proofreader_name, edition_number)
+     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8, $9)`,
+    [bookId, title, slug, publisherId, categoryId, quantity, coverImageUrl || null, proofreaderName || null, editionNumber]
   );
 
   await pool.query(
@@ -198,7 +199,11 @@ export default async function IntakeReviewPage({
           </select>
         </label>
         <label style={{ fontSize: 13 }}>
-          الكمية
+          رقم الإصدار
+          <input name="edition" type="number" defaultValue={suggested.edition || ""} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
+        </label>
+        <label style={{ fontSize: 13 }}>
+          عدد النسخ
           <input name="quantity" type="number" defaultValue={1} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
         </label>
         <button
