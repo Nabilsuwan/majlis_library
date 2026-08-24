@@ -183,7 +183,7 @@ export default async function StaffBooksPage() {
             </select>
           </label>
           <label style={{ fontSize: 13 }}>
-            الكمية
+            عدد النسخ
             <input name="quantity" type="number" defaultValue={1} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
           </label>
           <button
@@ -234,7 +234,7 @@ export default async function StaffBooksPage() {
                     {b.publisher_name}
                   </div>
                 )}
-                <div style={{ marginTop: 2, fontSize: 13, color: "#5C5040" }}>الكمية: {b.quantity}</div>
+                <div style={{ marginTop: 2, fontSize: 13, color: "#5C5040" }}>عدد النسخ: {b.quantity}</div>
                 <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "0.5px solid #C9BFA8" }}>
                   <a href={`/staff/books/${b.id}/edit`} style={{ display: "flex", alignItems: "center", gap: 4, color: "#1C1712", fontSize: 13, textDecoration: "none" }}>
                     <EditIcon />
