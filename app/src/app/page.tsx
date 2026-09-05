@@ -1,15 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { pool } from "@/lib/db";
-import { BookOpenIcon, PersonIcon, BuildingIcon, TagIcon } from "@/lib/icons";
-
-function toArabicNumerals(num: number): string {
-  const digits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-  return String(num)
-    .split("")
-    .map((d) => digits[parseInt(d)] ?? d)
-    .join("");
-}
 
 async function getStats() {
   const [books, authors, publishers, categories] = await Promise.all([
@@ -33,7 +24,7 @@ async function getTopCategories() {
     LEFT JOIN books b ON b.category_id = c.id AND b.status = 'published'
     GROUP BY c.id, c.name
     ORDER BY book_count DESC
-    LIMIT 4
+    LIMIT 6
   `);
   return rows;
 }
@@ -53,15 +44,16 @@ async function getRecentBooks() {
   return rows;
 }
 
-function StatItem({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-      {icon}
-      <strong style={{ fontSize: "2.3rem", fontWeight: 600 }}>{value}</strong>
-      <span style={{ fontSize: "1.3rem", color: "#C9BFA8" }}>{label}</span>
-    </div>
-  );
-}
+const ink = "#1E2A33";
+const teal = "#0F5C52";
+const maroon = "#7A2E2E";
+const parchment = "#EDE6D3";
+const cardBg = "#F5F0E1";
+const bodyText = "#5A5442";
+const hairline = "#C9BC98";
+const mutedText = "#8A8168";
+const amiri = "var(--font-display), serif";
+const tajawal = "var(--font-tajawal), sans-serif";
 
 export default async function Home() {
   const [stats, topCategories, recentBooks] = await Promise.all([
@@ -71,167 +63,168 @@ export default async function Home() {
   ]);
 
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#EDE3D0", maxWidth: 600, margin: "0 auto" }}>
-      <div
-        style={{
-          backgroundColor: "#2B3A4A",
-          color: "#EDE3D0",
-          padding: "2.5rem 1.5rem 2rem",
-          textAlign: "center",
-        }}
-      >
-        <svg width="220" height="22" viewBox="0 0 220 22" style={{ margin: "0 auto 1rem", display: "block" }}>
-          <g stroke="#9B2226" strokeWidth="1" fill="none">
-            <line x1="0" y1="11" x2="70" y2="11" />
-            <line x1="150" y1="11" x2="220" y2="11" />
-            <polygon points="110,2 118,7 118,15 110,20 102,15 102,7" />
-            <polygon points="110,6 114,8.5 114,13.5 110,16 106,13.5 106,8.5" />
-            <circle cx="80" cy="11" r="2" fill="#9B2226" />
-            <circle cx="140" cy="11" r="2" fill="#9B2226" />
-          </g>
-        </svg>
+    <main style={{ backgroundColor: parchment, color: ink, fontFamily: tajawal, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 680, margin: "0 auto" }}>
 
-        <h1 style={{ fontSize: "3.8rem", fontWeight: 500, margin: 0 }}>مكتبة المجلس</h1>
-        <p
+        <div
           style={{
-            fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "1rem",
-            color: "#C9BFA8",
-            maxWidth: 300,
-            margin: "0.75rem auto 0",
-            lineHeight: 1.8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 10,
+            padding: "14px 20px",
+            borderBottom: `1px solid ${hairline}`,
           }}
         >
-          مكتبة مرجعية تضم آلاف الكتب العربية التراثية والعلمية، في الفلسفة
-          والعقيدة والتصوف والتاريخ وعلوم أخرى.
-        </p>
-
-        <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: "1.75rem", flexWrap: "wrap" }}>
-          <StatItem icon={<BookOpenIcon size={28} />} value={stats.books} label="كتاب" />
-          <StatItem icon={<PersonIcon size={28} />} value={stats.authors} label="مؤلف" />
-          <StatItem icon={<BuildingIcon size={28} />} value={stats.publishers} label="ناشر" />
-          <StatItem icon={<TagIcon size={28} />} value={stats.categories} label="تصنيف" />
-        </div>
-
-        <div style={{ marginTop: "1.5rem", maxWidth: 220, marginLeft: "auto", marginRight: "auto" }}>
-          
-          <a
-            href="/books"
-            style={{
-              display: "block",
-              padding: "0.7rem",
-              backgroundColor: "#9B2226",
-              color: "#EDE3D0",
-              textDecoration: "none",
-              borderRadius: 4,
-              fontSize: 26,
-              fontWeight: 500,
-            }}
-          >
-            البحث بالمكتبة
-          </a>
-        </div>
-        
-        <a
-          href="/staff/login"
-          style={{
-            display: "block",
-            marginTop: "0.85rem",
-            fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "1.44rem",
-            color: "#8C99A8",
-          }}
-        >
-          دخول الموظفين
-        </a>
-      </div>
-
-      <div style={{ padding: "1.25rem 1.25rem 0.5rem" }}>
-        <p
-          style={{
-            fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "1.5rem",
-            color: "#9B2226",
-            letterSpacing: "0.05em",
-            margin: "0 0 0.6rem",
-            textAlign: "right",
-          }}
-        >
-          تصفح حسب التصنيف
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-          {topCategories.map((c) => (
-            <a
-            
-              key={c.name}
-              href={`/books?category=${c.id}`}
-              style={{
-                backgroundColor: "#F6F0E2",
-                borderRadius: 8,
-                padding: 10,
-                textAlign: "right",
-                textDecoration: "none",
-                color: "inherit",
-              }}
-            >
-              <div style={{ fontSize: 26, color: "#1C1712", fontWeight: 500 }}>{c.name}</div>
-              <div style={{ fontSize: 22, color: "#8C7A5E", marginTop: 2 }}>
-                {c.book_count} كتابًا
-              </div>
+          <div style={{ fontFamily: amiri, fontSize: "1.15rem", fontWeight: 700, color: teal }}>
+            مكتبة المجلس - الذيد
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13, flexWrap: "wrap" }}>
+            <a href="/" style={{ color: ink, textDecoration: "none" }}>الرئيسية</a>
+            <a href="/books" style={{ color: ink, textDecoration: "none" }}>الكتب</a>
+            <span style={{ width: 1, height: 14, backgroundColor: hairline }} />
+            <a href="/staff/login" style={{ color: mutedText, fontSize: 12, textDecoration: "none" }}>
+              دخول الموظفين
             </a>
-          ))}
+          </div>
         </div>
-      </div>
 
-      <div style={{ padding: "0.5rem 1.25rem 2rem" }}>
-        <p
+        <div style={{ position: "relative", padding: "2.5rem 1.25rem 2rem", overflow: "hidden" }}>
+          <svg width="180" height="180" viewBox="0 0 100 100" style={{ position: "absolute", left: -20, top: -15, opacity: 0.3 }}>
+            <g fill="none" stroke={maroon} strokeWidth="0.8">
+              <path d="M50 5 L61 33 L91 33 L67 51 L76 79 L50 61 L24 79 L33 51 L9 33 L39 33 Z" />
+              <circle cx="50" cy="50" r="44" />
+            </g>
+          </svg>
+
+          <div style={{ position: "relative", maxWidth: 480 }}>
+            <h1 style={{ fontFamily: amiri, fontSize: "1.8rem", fontWeight: 700, lineHeight: 1.35, margin: "0 0 0.75rem" }}>
+              مكتبة مرجعية تحفظ التراث العربي
+            </h1>
+            <p style={{ fontSize: "0.9rem", color: bodyText, lineHeight: 1.85, margin: "0 0 1.4rem" }}>
+              آلاف الكتب في الفلسفة والعقيدة والتصوف والتاريخ، منظمة كفهرس مخطوطة.
+            </p>
+
+            <form action="/books" method="get" style={{ display: "flex", gap: 8, marginBottom: "1.4rem" }}>
+              <input
+                name="q"
+                placeholder="ابحث عن كتاب أو مؤلف..."
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  backgroundColor: cardBg,
+                  border: `1px solid ${hairline}`,
+                  borderRadius: 4,
+                  padding: "0.6rem 0.85rem",
+                  fontSize: 13,
+                  color: ink,
+                  fontFamily: tajawal,
+                }}
+              />
+              <button
+                type="submit"
+                style={{
+                  backgroundColor: teal,
+                  color: parchment,
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "0.6rem 1.1rem",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  fontFamily: tajawal,
+                  cursor: "pointer",
+                }}
+              >
+                بحث
+              </button>
+            </form>
+
+            <div style={{ fontSize: 12, color: bodyText, borderTop: `1px solid ${hairline}`, paddingTop: 12 }}>
+              <span style={{ color: ink, fontWeight: 700 }}>{stats.books}</span> كتاب
+              {"  ·  "}
+              <span style={{ color: ink, fontWeight: 700 }}>{stats.authors}</span> مؤلف
+              {"  ·  "}
+              <span style={{ color: ink, fontWeight: 700 }}>{stats.publishers}</span> ناشر
+              {"  ·  "}
+              <span style={{ color: ink, fontWeight: 700 }}>{stats.categories}</span> تصنيف
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: "0.25rem 1.25rem 1.75rem" }}>
+          <h2 style={{ fontFamily: amiri, fontSize: "1.05rem", fontWeight: 700, margin: "0 0 0.25rem" }}>
+            تصفح حسب التصنيف
+          </h2>
+          <div style={{ borderTop: `1px solid ${hairline}`, marginTop: 8 }}>
+            {topCategories.map((c) => (
+              <a
+                key={c.id}
+                href={`/books?category=${c.id}`}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "0.7rem 0",
+                  borderBottom: `1px solid ${hairline}`,
+                  fontSize: 13,
+                  color: ink,
+                  textDecoration: "none",
+                }}
+              >
+                <span>{c.name}</span>
+                <span style={{ color: maroon }}>{c.book_count} كتابًا</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding: "0 1.25rem 2rem" }}>
+          <h2 style={{ fontFamily: amiri, fontSize: "1.05rem", fontWeight: 700, margin: "0 0 0.75rem" }}>
+            أضيف حديثًا
+          </h2>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {recentBooks.map((b) => (
+              <a
+              
+                key={b.slug}
+                href={`/books/${b.slug}`}
+                style={{
+                  flex: "1 1 200px",
+                  backgroundColor: cardBg,
+                  border: `1px solid ${hairline}`,
+                  borderRadius: 4,
+                  padding: "0.9rem",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                <div style={{ fontFamily: amiri, fontSize: 14, fontWeight: 700, color: ink }}>{b.title}</div>
+                <div style={{ fontSize: 12, color: bodyText, marginTop: 5 }}>{b.authors || "—"}</div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div
           style={{
-            fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "1.5rem",
-            color: "#9B2226",
-            letterSpacing: "0.05em",
-            margin: "0.75rem 0 0.6rem",
-            textAlign: "right",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 8,
+            padding: "0.9rem 1.25rem",
+            borderTop: `1px solid ${hairline}`,
+            fontSize: 12,
+            color: mutedText,
           }}
         >
-          أضيف حديثًا
-        </p>
-        {recentBooks.map((b, i) => (
-          <a
-          
-            key={b.slug}
-            href={`/books/${b.slug}`}
-            style={{
-              display: "block",
-              backgroundColor: "#F6F0E2",
-              borderRadius: 8,
-              padding: "10px 12px",
-              textAlign: "right",
-              textDecoration: "none",
-              color: "inherit",
-              marginBottom: i === 0 ? 6 : 0,
-            }}
-          >
-            <div style={{ fontSize: 26, color: "#1C1712", fontWeight: 500 }}>{b.title}</div>
-            <div style={{ fontSize: 22, color: "#8C7A5E", marginTop: 2 }}>{b.authors || "—"}</div>
+          <span>© مكتبة المجلس - الذيد</span>
+          <a href="/staff/login" style={{ color: mutedText, textDecoration: "none" }}>
+            دخول الموظفين
           </a>
-        ))}
-      </div>
+        </div>
 
-      <p
-        style={{
-          fontFamily: "var(--font-ui), sans-serif",
-          fontSize: "1.6rem",
-          color: "#8C7A5E",
-          textAlign: "center",
-          paddingBottom: "1.5rem",
-        }}
-      >
-        حالة الخادم:{" "}
-        <a href="/api/health" style={{ color: "#9B2226" }}>
-          /api/health
-        </a>
-      </p>
+      </div>
     </main>
   );
 }

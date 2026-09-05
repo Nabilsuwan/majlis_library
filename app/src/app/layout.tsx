@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { Amiri, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { Amiri, IBM_Plex_Sans_Arabic, Tajawal } from "next/font/google";
 
 const amiri = Amiri({
   subsets: ["arabic"],
   weight: ["400", "700"],
   variable: "--font-display",
+});
+
+const tajawal = Tajawal({
+  subsets: ["arabic"],
+  weight: ["400", "500", "700"],
+  variable: "--font-tajawal",
 });
 
 const plexSans = IBM_Plex_Sans_Arabic({
@@ -24,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" className={`${amiri.variable} ${plexSans.variable}`}>
+    <html lang="ar" dir="rtl" className={`${amiri.variable} ${plexSans.variable} ${tajawal.variable}`}>
       <body
         style={{
           margin: 0,
