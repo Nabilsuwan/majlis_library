@@ -28,7 +28,7 @@ async function getStats() {
 
 async function getTopCategories() {
   const { rows } = await pool.query(`
-    SELECT c.name, COUNT(b.id) AS book_count
+    SELECT c.id, c.name, COUNT(b.id) AS book_count
     FROM categories c
     LEFT JOIN books b ON b.category_id = c.id AND b.status = 'published'
     GROUP BY c.id, c.name
@@ -164,7 +164,7 @@ export default async function Home() {
             <a
             
               key={c.name}
-              href={`/books?category=${encodeURIComponent(c.name)}`}
+              href={`/books?category=${c.id}`}
               style={{
                 backgroundColor: "#F6F0E2",
                 borderRadius: 8,
