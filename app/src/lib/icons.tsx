@@ -120,3 +120,12 @@ export function UserIcon({ size = 18 }: { size?: number }) {
     </svg>
   );
 }
+
+export function TagIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41 11 22.99a2 2 0 0 1-2.83 0l-8.17-8.17a2 2 0 0 1 0-2.83L8.59 3.41A2 2 0 0 1 10 2.83L20 3a1 1 0 0 1 1 1l.17 10a2 2 0 0 1-.58 1.41z" />
+      <circle cx="14.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
