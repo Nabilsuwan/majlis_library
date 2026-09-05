@@ -71,7 +71,7 @@ export default async function Home() {
   ]);
 
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#EDE3D0" }}>
+    <main style={{ minHeight: "100vh", backgroundColor: "#EDE3D0", maxWidth: 600, margin: "0 auto" }}>
       <div
         style={{
           backgroundColor: "#2B3A4A",
