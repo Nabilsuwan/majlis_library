@@ -124,8 +124,28 @@ export function UserIcon({ size = 18 }: { size?: number }) {
 export function TagIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.59 13.41 11 22.99a2 2 0 0 1-2.83 0l-8.17-8.17a2 2 0 0 1 0-2.83L8.59 3.41A2 2 0 0 1 10 2.83L20 3a1 1 0 0 1 1 1l.17 10a2 2 0 0 1-.58 1.41z" />
-      <circle cx="14.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
+      <rect x="4" y="2" width="16" height="20" rx="1.5" />
+      <line x1="8" y1="7" x2="16" y2="7" />
+      <line x1="8" y1="11" x2="16" y2="11" />
+      <line x1="8" y1="15" x2="13" y2="15" />
+    </svg>
+  );
+}
+
+export function BookOpenIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 6c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0V6z" />
+      <path d="M21 6c-3-1.5-6-1.5-9 0v14c3-1.5 6-1.5 9 0V6z" />
+    </svg>
+  );
+}
+
+export function PersonIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="7" r="4" />
+      <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
     </svg>
   );
 }

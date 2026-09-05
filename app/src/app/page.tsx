@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { pool } from "@/lib/db";
-import { BookIcon, FeatherIcon, BuildingIcon, TagIcon } from "@/lib/icons";
+import { BookOpenIcon, PersonIcon, BuildingIcon, TagIcon } from "@/lib/icons";
 
 function toArabicNumerals(num: number): string {
   const digits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
@@ -107,8 +107,8 @@ export default async function Home() {
         </p>
 
         <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: "1.75rem", flexWrap: "wrap" }}>
-          <StatItem icon={<BookIcon size={28} />} value={stats.books} label="كتاب" />
-          <StatItem icon={<FeatherIcon size={28} />} value={stats.authors} label="مؤلف" />
+          <StatItem icon={<BookOpenIcon size={28} />} value={stats.books} label="كتاب" />
+          <StatItem icon={<PersonIcon size={28} />} value={stats.authors} label="مؤلف" />
           <StatItem icon={<BuildingIcon size={28} />} value={stats.publishers} label="ناشر" />
           <StatItem icon={<TagIcon size={28} />} value={stats.categories} label="تصنيف" />
         </div>
