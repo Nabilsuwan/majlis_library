@@ -95,7 +95,7 @@ export default async function Home() {
         <p
           style={{
             fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "1.7rem",
+            fontSize: "1rem",
             color: "#C9BFA8",
             maxWidth: 300,
             margin: "0.75rem auto 0",
