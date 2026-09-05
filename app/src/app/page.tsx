@@ -57,8 +57,8 @@ function StatItem({ icon, value, label }: { icon: React.ReactNode; value: number
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
       {icon}
-      <strong style={{ fontSize: "1.15rem", fontWeight: 600 }}>{toArabicNumerals(value)}</strong>
-      <span style={{ fontSize: "0.65rem", color: "#C9BFA8" }}>{label}</span>
+      <strong style={{ fontSize: "2.3rem", fontWeight: 600 }}>{toArabicNumerals(value)}</strong>
+      <span style={{ fontSize: "1.3rem", color: "#C9BFA8" }}>{label}</span>
     </div>
   );
 }
@@ -91,11 +91,11 @@ export default async function Home() {
           </g>
         </svg>
 
-        <h1 style={{ fontSize: "1.9rem", fontWeight: 500, margin: 0 }}>مكتبة المجلس</h1>
+        <h1 style={{ fontSize: "3.8rem", fontWeight: 500, margin: 0 }}>مكتبة المجلس</h1>
         <p
           style={{
             fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "0.85rem",
+            fontSize: "1.7rem",
             color: "#C9BFA8",
             maxWidth: 300,
             margin: "0.75rem auto 0",
@@ -124,7 +124,7 @@ export default async function Home() {
               color: "#EDE3D0",
               textDecoration: "none",
               borderRadius: 4,
-              fontSize: 13,
+              fontSize: 26,
               fontWeight: 500,
             }}
           >
@@ -138,7 +138,7 @@ export default async function Home() {
             display: "block",
             marginTop: "0.85rem",
             fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "0.72rem",
+            fontSize: "1.44rem",
             color: "#8C99A8",
           }}
         >
@@ -150,7 +150,7 @@ export default async function Home() {
         <p
           style={{
             fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "0.75rem",
+            fontSize: "1.5rem",
             color: "#9B2226",
             letterSpacing: "0.05em",
             margin: "0 0 0.6rem",
@@ -174,8 +174,8 @@ export default async function Home() {
                 color: "inherit",
               }}
             >
-              <div style={{ fontSize: 13, color: "#1C1712", fontWeight: 500 }}>{c.name}</div>
-              <div style={{ fontSize: 11, color: "#8C7A5E", marginTop: 2 }}>
+              <div style={{ fontSize: 26, color: "#1C1712", fontWeight: 500 }}>{c.name}</div>
+              <div style={{ fontSize: 22, color: "#8C7A5E", marginTop: 2 }}>
                 {toArabicNumerals(Number(c.book_count))} كتابًا
               </div>
             </a>
@@ -187,7 +187,7 @@ export default async function Home() {
         <p
           style={{
             fontFamily: "var(--font-ui), sans-serif",
-            fontSize: "0.75rem",
+            fontSize: "1.5rem",
             color: "#9B2226",
             letterSpacing: "0.05em",
             margin: "0.75rem 0 0.6rem",
@@ -212,8 +212,8 @@ export default async function Home() {
               marginBottom: i === 0 ? 6 : 0,
             }}
           >
-            <div style={{ fontSize: 13, color: "#1C1712", fontWeight: 500 }}>{b.title}</div>
-            <div style={{ fontSize: 11, color: "#8C7A5E", marginTop: 2 }}>{b.authors || "—"}</div>
+            <div style={{ fontSize: 26, color: "#1C1712", fontWeight: 500 }}>{b.title}</div>
+            <div style={{ fontSize: 22, color: "#8C7A5E", marginTop: 2 }}>{b.authors || "—"}</div>
           </a>
         ))}
       </div>
@@ -221,7 +221,7 @@ export default async function Home() {
       <p
         style={{
           fontFamily: "var(--font-ui), sans-serif",
-          fontSize: "0.8rem",
+          fontSize: "1.6rem",
           color: "#8C7A5E",
           textAlign: "center",
           paddingBottom: "1.5rem",
