@@ -57,7 +57,7 @@ function StatItem({ icon, value, label }: { icon: React.ReactNode; value: number
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
       {icon}
-      <strong style={{ fontSize: "2.3rem", fontWeight: 600 }}>{toArabicNumerals(value)}</strong>
+      <strong style={{ fontSize: "2.3rem", fontWeight: 600 }}>{value}</strong>
       <span style={{ fontSize: "1.3rem", color: "#C9BFA8" }}>{label}</span>
     </div>
   );
@@ -176,7 +176,7 @@ export default async function Home() {
             >
               <div style={{ fontSize: 26, color: "#1C1712", fontWeight: 500 }}>{c.name}</div>
               <div style={{ fontSize: 22, color: "#8C7A5E", marginTop: 2 }}>
-                {toArabicNumerals(Number(c.book_count))} كتابًا
+                {c.book_count} كتابًا
               </div>
             </a>
           ))}
