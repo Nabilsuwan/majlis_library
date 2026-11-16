@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
 import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
 
 function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
@@ -73,16 +72,20 @@ export default function IntakePage() {
 
     try {
       setStatus("uploading");
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/intake/upload",
-      });
+      const form = new FormData();
+      form.append("photo", file);
+      const up = await fetch("/api/intake/upload", { method: "POST", body: form });
+      if (!up.ok) {
+        const data = await up.json().catch(() => ({}));
+        throw new Error(data.error || "فشل رفع الصورة");
+      }
+      const { url: coverUrl } = await up.json();
 
       setStatus("analyzing");
       const res = await fetch("/api/intake/analyze", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ blobUrl: blob.url }),
+        body: JSON.stringify({ coverUrl }),
       });
 
       if (!res.ok) {

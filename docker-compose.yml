@@ -1,16 +1,28 @@
+# Majlis Library — runs on the QNAP TS-873A (Container Station).
+#
+#   Library site ...... http://192.168.1.192:3000
+#   n8n ............... http://192.168.1.192:5678
+#   Database .......... internal only (not reachable from the network)
+#
+# Folders on the NAS (create the "Majlis" shared folder first):
+#   /share/Majlis/covers    cover images
+#   /share/Majlis/backups   nightly database backups (kept 30 days)
+#
+# Start / update:   docker compose up -d --build
+# See QNAP.md for the full guide.
+
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: majlis
       POSTGRES_USER: majlis
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      TZ: Asia/Dubai
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-    ports:
-      - "127.0.0.1:5432:5432"   # bound to localhost only — not exposed publicly
+    # No "ports:" on purpose — only the app and backup containers can reach it.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U majlis -d majlis"]
       interval: 5s
@@ -26,9 +38,50 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://majlis:${DB_PASSWORD}@db:5432/majlis
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      COVERS_DIR: /data/covers
       NODE_ENV: production
+      TZ: Asia/Dubai
+    volumes:
+      - ${NAS_ROOT:-/share/Majlis}/covers:/data/covers
     ports:
-      - "127.0.0.1:3000:3000"   # nginx (on the host) proxies to this
+      - "3000:3000"
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: majlis
+      PGDATABASE: majlis
+      PGPASSWORD: ${DB_PASSWORD}
+      KEEP_DAYS: "30"
+      BACKUP_TIME: "0200"   # 2:00 AM Dubai time
+      TZ: Asia/Dubai
+    volumes:
+      - ./backup/backup.sh:/backup.sh:ro
+      - ${NAS_ROOT:-/share/Majlis}/backups:/backups
+    entrypoint: ["sh", "/backup.sh"]
+
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY in .env}
+      GENERIC_TIMEZONE: Asia/Dubai
+      TZ: Asia/Dubai
+      # Needed while n8n is opened over plain http on the office network /
+      # Tailscale. Both are private, encrypted-or-local paths.
+      N8N_SECURE_COOKIE: "false"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    ports:
+      - "5678:5678"
 
 volumes:
   db_data:
+  n8n_data:

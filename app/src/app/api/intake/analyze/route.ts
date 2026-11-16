@@ -1,19 +1,34 @@
 import { pool } from "@/lib/db";
-import { cookies } from "next/headers";
-import { verifySessionToken } from "@/lib/auth";
+import { readFile } from "fs/promises";
 import { NextResponse } from "next/server";
+import { getStaffSession } from "@/lib/session";
+import { CONTENT_TYPES, coverNameFromUrl, coverPath } from "@/lib/covers";
 
 export async function POST(request: Request) {
-  const { blobUrl } = await request.json();
+  // Check login BEFORE doing anything that costs money (the Claude API call).
+  const session = await getStaffSession();
+  if (!session) {
+    return NextResponse.json({ error: "يجب تسجيل الدخول" }, { status: 401 });
+  }
 
-  if (!blobUrl) {
+  const body = await request.json().catch(() => ({}));
+  const coverUrl: string = body.coverUrl || "";
+
+  // Only accept covers that were uploaded to our own covers folder — never
+  // fetch arbitrary URLs from the server.
+  const name = coverNameFromUrl(coverUrl);
+  if (!name) {
     return NextResponse.json({ error: "الرجاء رفع صورة" }, { status: 400 });
   }
 
-  const imgResponse = await fetch(blobUrl);
-  const bytes = await imgResponse.arrayBuffer();
-  const base64 = Buffer.from(bytes).toString("base64");
-  const mediaType = imgResponse.headers.get("content-type") || "image/jpeg";
+  let bytes: Buffer;
+  try {
+    bytes = await readFile(coverPath(name));
+  } catch {
+    return NextResponse.json({ error: "لم يتم العثور على الصورة" }, { status: 404 });
+  }
+  const base64 = bytes.toString("base64");
+  const mediaType = CONTENT_TYPES[name.split(".").pop() as string] || "image/jpeg";
 
   const promptText =
     "هذه صورة غلاف كتاب عربي تراثي أو علمي. اقرأ النص بعناية فائقة " +
@@ -77,15 +92,11 @@ export async function POST(request: Request) {
     suggested = { title: "", author: "", publisher: "", edition: "", proofreader: "" };
   }
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get("majlis_session")?.value;
-  const session = token ? await verifySessionToken(token) : null;
-
   const result = await pool.query(
     `INSERT INTO intake_submissions (suggested_data, cover_image_url, status, submitted_by)
      VALUES ($1, $2, 'pending_review', $3)
      RETURNING id`,
-    [JSON.stringify(suggested), blobUrl, session?.staffId || null]
+    [JSON.stringify(suggested), coverUrl, session.staffId]
   );
 
   return NextResponse.json({ submissionId: result.rows[0].id });

@@ -1,3 +1,5 @@
+> **No longer used.** The project now runs on the office QNAP NAS — see `QNAP.md`.
+
 # Deploying to sharjahbook.com (148.66.157.129, Ubuntu 22.04, Singapore)
 
 These steps assume you're SSH'd into the server as a user with sudo access.

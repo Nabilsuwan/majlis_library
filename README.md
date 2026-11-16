@@ -1,4 +1,4 @@
-# Majlis Library System (sharjahbook.com)
+# Majlis Library System
 
 Rebuild of the Arabic scholarly/heritage book library — replacing a
 
@@ -24,8 +24,9 @@ the real production server:
 
 - **Database:** Neon (free Postgres) — see `schema.sql`
 - **App hosting:** Vercel (free, auto-deploys from this repo)
-- **Production target (later):** self-hosted on the GoDaddy Ubuntu
-  22.04 VPS at sharjahbook.com — see `DEPLOY.md` for that migration
+- **Production target:** self-hosted on the office QNAP NAS
+  (Container Station), reached on the office network or via Tailscale —
+  see **`QNAP.md`** for the move
 
 ## Local development
 
@@ -48,7 +49,9 @@ psql "$DATABASE_URL" -f schema.sql
 ```
 schema.sql          Database schema (Postgres)
 app/                 Next.js application (staff tools + public site)
-docker-compose.yml   Self-hosted deployment (Postgres + app)
-nginx/majlis.conf    Reverse proxy config for the production VPS
-DEPLOY.md            Step-by-step production deployment guide
+docker-compose.yml   QNAP deployment (Postgres + app + backups + n8n)
+backup/              Nightly database backup script
+migrate/             Scripts to move from Neon/Vercel to the NAS
+QNAP.md              Step-by-step NAS move + checklists
+DEPLOY.md            (old) VPS plan for sharjahbook.com — no longer used
 ```

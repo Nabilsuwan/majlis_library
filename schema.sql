@@ -17,6 +17,12 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";    -- trigram similarity for
                                               -- differently" search (brief,
                                               -- public-site requirements)
 
+-- unaccent() is not marked IMMUTABLE, so Postgres refuses it inside a
+-- generated column. This wrapper (the standard workaround) is.
+CREATE OR REPLACE FUNCTION immutable_unaccent(text) RETURNS text
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
+    AS $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$;
+
 -- ------------------------------------------------------------
 -- STAFF ACCOUNTS
 -- ------------------------------------------------------------
@@ -54,7 +60,7 @@ CREATE TABLE authors (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     canonical_name    TEXT NOT NULL,
     canonical_name_normalized TEXT GENERATED ALWAYS AS
-                      (unaccent(lower(canonical_name))) STORED,
+                      (immutable_unaccent(lower(canonical_name))) STORED,
     notes             TEXT,               -- bio, dates, disambiguation
     created_by        UUID REFERENCES staff(id),
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -95,7 +101,7 @@ CREATE TABLE publishers (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name              TEXT NOT NULL,
     name_normalized   TEXT GENERATED ALWAYS AS
-                      (unaccent(lower(name))) STORED,
+                      (immutable_unaccent(lower(name))) STORED,
     city              TEXT,
     created_by        UUID REFERENCES staff(id),
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -153,7 +159,7 @@ CREATE TABLE books (
 
     title             TEXT NOT NULL,
     title_normalized  TEXT GENERATED ALWAYS AS
-                      (unaccent(lower(title))) STORED,
+                      (immutable_unaccent(lower(title))) STORED,
                       -- powers "search finds it even without
                       -- diacritics or with slight spelling
                       -- differences" (brief, public-site reqs)
@@ -269,3 +275,9 @@ CREATE TABLE intake_submissions (
     submitted_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     reviewed_at       TIMESTAMPTZ
 );
+
+-- ------------------------------------------------------------
+-- Added later on the live (Neon) database; kept here so a fresh
+-- install matches it.
+-- ------------------------------------------------------------
+ALTER TABLE books ADD COLUMN IF NOT EXISTS proofreader_name TEXT;
