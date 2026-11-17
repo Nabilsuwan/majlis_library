@@ -42,6 +42,9 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       COVERS_DIR: /data/covers
+      # Site is opened over plain http on the office network / Tailscale,
+      # where browsers refuse "secure" cookies (staff could not stay logged in).
+      COOKIE_SECURE: "false"
       NODE_ENV: production
       TZ: Asia/Dubai
     volumes:

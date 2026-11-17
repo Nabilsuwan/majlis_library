@@ -38,7 +38,10 @@ async function login(formData: FormData) {
   const cookieStore = await cookies();
   cookieStore.set("majlis_session", token, {
     httpOnly: true,
-    secure: true,
+    // Browsers drop "secure" cookies on plain http. The NAS is reached over
+    // http (office network / Tailscale), so docker-compose sets
+    // COOKIE_SECURE=false; anywhere else (https) it stays secure.
+    secure: process.env.COOKIE_SECURE !== "false",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 7, // 7 days
