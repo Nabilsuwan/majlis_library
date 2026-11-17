@@ -9,7 +9,7 @@ KEEP_DAYS="${KEEP_DAYS:-30}"
 do_backup() {
   file="/backups/majlis-$(date +%Y-%m-%d).dump"
   if pg_dump -Fc -f "$file.tmp" && mv "$file.tmp" "$file"; then
-    echo "$(date '+%F %T') backup OK: $file ($(du -h "$file" | cut -f1))"
+    echo "$(date '+%F %T') backup OK: $file ($(wc -c < "$file" | tr -d " ") bytes)"
   else
     rm -f "$file.tmp"
     echo "$(date '+%F %T') BACKUP FAILED"
