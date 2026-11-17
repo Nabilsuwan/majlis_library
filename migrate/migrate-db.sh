@@ -3,33 +3,54 @@
 # Run on the NAS, from the project folder, AFTER `docker compose up -d`:
 #
 #   sh migrate/migrate-db.sh 'postgresql://USER:PASSWORD@HOST/neondb?sslmode=require'
+#   sh migrate/migrate-db.sh /share/Majlis/backups/neon-export-....dump   (reuse an export)
 #
 # The Neon connection string is Vercel's DATABASE_URL (or Neon dashboard ->
-# Connection Details). Safe to re-run: it replaces the NAS copy each time.
+# Connect). Safe to re-run: it replaces the NAS copy each time.
 set -e
 
-NEON_URL="$1"
-if [ -z "$NEON_URL" ]; then
-  echo "Usage: sh migrate/migrate-db.sh '<Neon connection string>'"
+SOURCE="$1"
+if [ -z "$SOURCE" ]; then
+  echo "Usage: sh migrate/migrate-db.sh '<Neon connection string>' | <existing .dump file>"
   exit 1
 fi
 
 . ./.env
 DUMP_DIR="${NAS_ROOT:-/share/Majlis}/backups"
-DUMP="$DUMP_DIR/neon-export-$(date +%Y%m%d-%H%M).dump"
 mkdir -p "$DUMP_DIR"
 
-echo "1/3  Exporting from Neon..."
-docker run --rm -v "$DUMP_DIR:/out" postgres:18-alpine \
-  pg_dump "$NEON_URL" -Fc --no-owner --no-acl -f "/out/$(basename "$DUMP")"
-echo "     saved $DUMP"
+if [ -f "$SOURCE" ]; then
+  DUMP="$SOURCE"
+  echo "1/3  Using existing export $DUMP"
+else
+  DUMP="$DUMP_DIR/neon-export-$(date +%Y%m%d-%H%M).dump"
+  echo "1/3  Exporting from Neon..."
+  docker run --rm -v "$DUMP_DIR:/out" postgres:18-alpine \
+    pg_dump "$SOURCE" -Fc --no-owner --no-acl -f "/out/$(basename "$DUMP")"
+  echo "     saved $DUMP"
+fi
 
 echo "2/3  Importing into the NAS database (replacing what's there)..."
-docker compose exec -T db psql -U majlis -d majlis -q -c \
-  "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-# Neon-specific settings can produce a few harmless warnings here.
-docker compose exec -T db pg_restore -U majlis -d majlis --no-owner --no-acl \
-  < "$DUMP" || echo "     (pg_restore reported warnings — check the counts below)"
+PSQL="docker compose exec -T db psql -U majlis -d majlis -q -v ON_ERROR_STOP=1"
+
+# Neon's immutable_unaccent() calls unaccent() without a schema name, which
+# breaks during restore (pg_restore empties search_path). Create a fixed
+# version first and skip the dump's copy of it.
+$PSQL -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;
+  CREATE EXTENSION IF NOT EXISTS pgcrypto;
+  CREATE EXTENSION IF NOT EXISTS unaccent;
+  CREATE EXTENSION IF NOT EXISTS pg_trgm;
+  CREATE FUNCTION public.immutable_unaccent(text) RETURNS text
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
+    AS \$\$ SELECT public.unaccent('public.unaccent'::regdictionary, \$1) \$\$;"
+
+docker compose cp "$DUMP" db:/tmp/neon.dump
+docker compose exec -T db sh -c '
+  pg_restore -l /tmp/neon.dump | grep -v -E "FUNCTION public immutable_unaccent|EXTENSION " > /tmp/neon.list
+  pg_restore -U majlis -d majlis --no-owner --no-acl -L /tmp/neon.list /tmp/neon.dump
+  rc=$?
+  rm -f /tmp/neon.dump /tmp/neon.list
+  exit $rc' || echo "     (pg_restore reported problems — check the counts below)"
 
 echo "3/3  Checking..."
 docker compose exec -T db psql -U majlis -d majlis -c "
