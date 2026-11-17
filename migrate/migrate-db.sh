@@ -20,7 +20,7 @@ DUMP="$DUMP_DIR/neon-export-$(date +%Y%m%d-%H%M).dump"
 mkdir -p "$DUMP_DIR"
 
 echo "1/3  Exporting from Neon..."
-docker run --rm -v "$DUMP_DIR:/out" postgres:17-alpine \
+docker run --rm -v "$DUMP_DIR:/out" postgres:18-alpine \
   pg_dump "$NEON_URL" -Fc --no-owner --no-acl -f "/out/$(basename "$DUMP")"
 echo "     saved $DUMP"
 

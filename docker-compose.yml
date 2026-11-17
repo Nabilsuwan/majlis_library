@@ -13,7 +13,7 @@
 
 services:
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: majlis
@@ -21,7 +21,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
       TZ: Asia/Dubai
     volumes:
-      - db_data:/var/lib/postgresql/data
+      # Postgres 18 images keep data under /var/lib/postgresql/18/...
+      - db_data:/var/lib/postgresql
     # No "ports:" on purpose — only the app and backup containers can reach it.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U majlis -d majlis"]
@@ -49,7 +50,7 @@ services:
       - "3000:3000"
 
   backup:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     depends_on:
       db:
