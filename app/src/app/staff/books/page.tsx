@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { findOrCreateAuthor, findOrCreatePublisher, slugify } from "@/lib/staff-helpers";
 import { randomUUID } from "crypto";
 import DeleteBookButton from "@/components/DeleteBookButton";
-import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, EditIcon, FeatherIcon, PlusIcon } from "@/lib/icons";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, EditIcon, FeatherIcon, PlusIcon, PinIcon } from "@/lib/icons";
 
 async function getBooks() {
   const { rows } = await pool.query(`
@@ -130,6 +130,8 @@ function StaffNav() {
       {navLink("/staff/books", true, <BookIcon />, "الكتب")}
       {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
       {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
+      {navLink("/staff/intake", false, <CameraIcon />, "تصوير")}
+      {navLink("/staff/place", false, <PinIcon />, "المواقع")}
       <span style={{ flex: 1, minWidth: 8 }} />
       {navLink("/", false, <HomeIcon />, "الرئيسية")}
       {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}

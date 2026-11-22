@@ -10,7 +10,7 @@ import {
   siteBaseUrl,
 } from "@/lib/copies";
 import { findOrCreateAuthor, findOrCreatePublisher } from "@/lib/staff-helpers";
-import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, PinIcon } from "@/lib/icons";
 
 async function getBook(id: string) {
   const { rows } = await pool.query(
@@ -184,6 +184,7 @@ function StaffNav() {
       {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
       {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
       {navLink("/staff/intake", false, <CameraIcon />, "تصوير")}
+      {navLink("/staff/place", false, <PinIcon />, "المواقع")}
       <span style={{ flex: 1, minWidth: 8 }} />
       {navLink("/", false, <HomeIcon />, "الرئيسية")}
       {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}

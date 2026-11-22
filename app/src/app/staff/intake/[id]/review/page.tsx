@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { verifySessionToken } from "@/lib/auth";
 import { findOrCreateAuthor, findOrCreatePublisher, slugify } from "@/lib/staff-helpers";
 import { randomUUID } from "crypto";
-import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, PinIcon } from "@/lib/icons";
 
 async function getSubmission(id: string) {
   const { rows } = await pool.query(
@@ -70,7 +70,8 @@ async function confirmIntake(formData: FormData) {
     [bookId, session?.staffId || null, submissionId]
   );
 
-  redirect(`/staff/books/${bookId}/edit?new=1#copies`);
+  const { rows: added } = await pool.query("SELECT book_number FROM books WHERE id = $1", [bookId]);
+  redirect(`/staff/intake?added=${added[0]?.book_number ?? ""}&book=${bookId}`);
 }
 
 function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
@@ -116,6 +117,7 @@ function StaffNav() {
       {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
       {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
       {navLink("/staff/intake", true, <CameraIcon />, "تصوير")}
+      {navLink("/staff/place", false, <PinIcon />, "المواقع")}
       <span style={{ flex: 1, minWidth: 8 }} />
       {navLink("/", false, <HomeIcon />, "الرئيسية")}
       {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}

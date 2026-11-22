@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon } from "@/lib/icons";
+import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, PinIcon } from "@/lib/icons";
 
 function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {
   return (
@@ -47,6 +47,7 @@ function StaffNav() {
       {navLink("/staff/authors", false, <UsersIcon />, "المؤلفون")}
       {navLink("/staff/publishers", false, <BuildingIcon />, "الناشرون")}
       {navLink("/staff/intake", true, <CameraIcon />, "تصوير")}
+      {navLink("/staff/place", false, <PinIcon />, "المواقع")}
       <span style={{ flex: 1, minWidth: 8 }} />
       {navLink("/", false, <HomeIcon />, "الرئيسية")}
       {navLink("/staff/logout", false, <LogoutIcon />, "خروج")}
@@ -58,6 +59,14 @@ export default function IntakePage() {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "uploading" | "analyzing">("idle");
   const [error, setError] = useState("");
+  const [added, setAdded] = useState<{ number: string; id: string } | null>(null);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const number = p.get("added");
+    const id = p.get("book");
+    if (number && id) setAdded({ number, id });
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -104,6 +113,15 @@ export default function IntakePage() {
   return (
     <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <StaffNav />
+      {added && (
+        <p style={{ backgroundColor: "#E5F4E4", padding: "10px 12px", borderRadius: 8, fontSize: 14, lineHeight: 1.8 }}>
+          تم حفظ الكتاب رقم <b dir="ltr">#{added.number}</b>. صوّر الكتاب التالي.
+          <br />
+          <a href={`/staff/books/${added.id}/edit#copies`} style={{ color: "#1C1712" }}>تحديد مكانه الآن</a>
+          {" · "}
+          <a href="/staff/place" style={{ color: "#1C1712" }}>صفحة المواقع</a>
+        </p>
+      )}
       <h1 style={{ fontSize: 20 }}>إضافة كتاب بالتصوير</h1>
       <p style={{ color: "#5C5040", fontSize: 13 }}>
         صوّر غلاف الكتاب، وسيحاول النظام قراءة العنوان والمؤلف والناشر
