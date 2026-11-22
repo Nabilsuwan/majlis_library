@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { pool } from "@/lib/db";
+import { redirect } from "next/navigation";
 import { SearchIcon, FeatherIcon, BuildingIcon } from "@/lib/icons";
 
 async function getCategories() {
@@ -61,6 +62,7 @@ export default async function BooksPage({
 }) {
   const params = await searchParams;
   const q = params.q || "";
+  if (/^\s*\d{1,7}(-\d{1,4})?\s*$/.test(q)) redirect(`/b/${q.trim()}`);
   const categoryId = params.category || "";
   const [books, categories] = await Promise.all([
     searchBooks(q, categoryId),

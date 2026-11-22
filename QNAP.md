@@ -119,3 +119,22 @@ Give the Mac mini a fixed IP in the router/DHCP so this address doesn't change.
 
 Extra safety: schedule **ZFS snapshots** of the `Majlis` shared folder
 (Storage & Snapshots → Snapshot → Schedule, e.g. daily, keep 14).
+
+---
+
+## Update: Phase 1 — Book IDs, copies, shelf boxes
+
+Run once on the NAS (SSH, `sudo -i`, then):
+
+```sh
+cd /share/Majlis/majlis_library
+docker run --rm -v /share/Majlis:/w alpine/git -C /w/majlis_library pull -q
+docker compose exec -T backup pg_dump -Fc -f /backups/before-phase1.dump && ls -l /share/Majlis/backups/before-phase1.dump
+docker compose exec -T db psql -U majlis -d majlis -v ON_ERROR_STOP=1 < migrate/phase1-locations.sql
+docker compose up -d --build app
+```
+
+The last line of the database step prints: books, first and last Book ID,
+copies, and shelf_boxes (should be 133). Safe to run again.
+
+To undo: `docker compose exec -T db pg_restore --clean --no-owner -U majlis -d majlis < /share/Majlis/backups/before-phase1.dump`

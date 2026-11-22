@@ -70,7 +70,7 @@ async function confirmIntake(formData: FormData) {
     [bookId, session?.staffId || null, submissionId]
   );
 
-  redirect("/staff/books");
+  redirect(`/staff/books/${bookId}/edit?new=1#copies`);
 }
 
 function navLink(href: string, active: boolean, icon: React.ReactNode, label: string) {

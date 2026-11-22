@@ -3,11 +3,13 @@ export const dynamic = "force-dynamic";
 import { pool } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { describeShelf, copyCode } from "@/lib/copies";
+import { getStaffSession } from "@/lib/session";
 
 async function getBook(slug: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url, b.proofreader_name,
+    SELECT b.id, b.book_number, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url, b.proofreader_name,
            c.name AS category_name,
            p.name AS publisher_name,
            COALESCE(string_agg(a.canonical_name, '، ' ORDER BY ba.sort_order), '') AS authors
@@ -22,6 +24,17 @@ async function getBook(slug: string) {
     [slug]
   );
   return rows[0] || null;
+}
+
+async function getCopies(bookId: string) {
+  const { rows } = await pool.query(
+    `SELECT c.copy_number, c.shelf_code, c.status, s.wall
+     FROM book_copies c LEFT JOIN shelf_boxes s ON s.code = c.shelf_code
+     WHERE c.book_id = $1 AND c.status <> 'withdrawn'
+     ORDER BY c.copy_number`,
+    [bookId]
+  );
+  return rows;
 }
 
 export async function generateMetadata({
@@ -66,12 +79,17 @@ function ColophonRow({ label, value }: { label: string; value: string }) {
 
 export default async function BookDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ copy?: string }>;
 }) {
   const { slug } = await params;
+  const { copy } = await searchParams;
   const book = await getBook(slug);
   if (!book) notFound();
+  const [copies, staff] = await Promise.all([getCopies(book.id), getStaffSession()]);
+  const highlight = copy ? Number(copy) : null;
 
   return (
     <main style={{ maxWidth: 640, margin: "0 auto", padding: "1.5rem 1.5rem 6rem" }}>
@@ -139,6 +157,7 @@ export default async function BookDetailPage({
           — بيانات الكتاب —
         </p>
         <dl style={{ margin: 0 }}>
+          <ColophonRow label="رقم الكتاب" value={String(book.book_number)} />
           <ColophonRow label="المؤلف" value={book.authors || "غير معروف"} />
           <ColophonRow label="الناشر" value={book.publisher_name || "—"} />
           <ColophonRow label="التصنيف" value={book.category_name || "—"} />
@@ -153,6 +172,58 @@ export default async function BookDetailPage({
           )}
         </dl>
       </div>
+
+      <section id="copies" style={{ marginTop: "2rem" }}>
+        <h2 style={{ fontSize: "1.2rem", margin: "0 0 0.75rem" }}>
+          مكان الكتاب في المكتبة
+        </h2>
+        {copies.length === 0 && (
+          <p style={{ color: "#5C5040" }}>لم تُسجَّل نسخ لهذا الكتاب بعد.</p>
+        )}
+        <div style={{ display: "grid", gap: "0.6rem" }}>
+          {copies.map((c) => {
+            const active = highlight === c.copy_number;
+            return (
+              <div
+                key={c.copy_number}
+                style={{
+                  padding: "0.85rem 1rem",
+                  border: active ? "2px solid #9B2226" : "1px solid #C9BFA8",
+                  backgroundColor: active ? "#F6E9E9" : "#F6F0E2",
+                  borderRadius: 8,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.4rem 1rem",
+                  alignItems: "baseline",
+                }}
+              >
+                <span style={{ fontFamily: "var(--font-ui), sans-serif", fontSize: "0.8rem", color: "#8C7A5E" }}>
+                  النسخة <b dir="ltr">{copyCode(book.book_number, c.copy_number)}</b>
+                  {active && " — هذه النسخة"}
+                </span>
+                {c.shelf_code ? (
+                  <span>
+                    <b style={{ fontSize: "1.3rem", color: "#9B2226" }} dir="ltr">{c.shelf_code}</b>{" "}
+                    <span style={{ fontSize: "0.9rem", color: "#5C5040" }}>{describeShelf(c.shelf_code, c.wall)}</span>
+                  </span>
+                ) : (
+                  <span style={{ color: "#8C7A5E" }}>لم يُحدَّد مكانها بعد</span>
+                )}
+                {c.status === "missing" && (
+                  <span style={{ color: "#9B2226", fontSize: "0.85rem" }}>غير موجودة في مكانها حاليًا</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {staff && (
+          <p style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>
+            <a href={`/staff/books/${book.id}/edit#copies`} style={{ color: "#9B2226" }}>
+              إدارة النسخ والموقع (للموظفين)
+            </a>
+          </p>
+        )}
+      </section>
 
       <p
         style={{

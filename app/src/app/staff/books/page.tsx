@@ -9,7 +9,8 @@ import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, Ed
 
 async function getBooks() {
   const { rows } = await pool.query(`
-    SELECT b.id, b.title, b.quantity, b.status,
+    SELECT b.id, b.book_number, b.title, b.quantity, b.status,
+           (SELECT count(*) FROM book_copies c WHERE c.book_id = b.id AND c.shelf_code IS NULL) AS unplaced,
            p.name AS publisher_name,
            c.name AS category_name,
            COALESCE(
@@ -214,6 +215,18 @@ export default async function StaffBooksPage() {
       </section>
 
       <section>
+        <form action="/staff/find" method="get" style={{ display: "flex", gap: 8, margin: "0 0 12px" }}>
+          <input
+            name="n"
+            inputMode="numeric"
+            dir="ltr"
+            placeholder="رقم الكتاب (123 أو 123-2)"
+            style={{ flex: 1, padding: 8, fontSize: 16 }}
+          />
+          <button type="submit" style={{ padding: "8px 14px", backgroundColor: "#1C1712", color: "#EDE3D0", border: "none", borderRadius: 6 }}>
+            اذهب
+          </button>
+        </form>
         <h2 style={{ fontSize: 16 }}>الكتب الحالية ({books.length})</h2>
         {books.length === 0 ? (
           <p style={{ color: "#8C7A5E" }}>لا توجد كتب بعد.</p>
@@ -222,7 +235,10 @@ export default async function StaffBooksPage() {
             {books.map((b) => (
               <div key={b.id} style={{ backgroundColor: "#F6F0E2", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700 }}>{b.title}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>
+                    <span dir="ltr" style={{ color: "#9B2226", fontWeight: 600, marginInlineEnd: 6 }}>#{b.book_number}</span>
+                    {b.title}
+                  </div>
                   {b.category_name && (
                     <span style={{ backgroundColor: "#9B2226", color: "#F6E9E9", fontSize: 11, padding: "3px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>
                       {b.category_name}
@@ -239,7 +255,12 @@ export default async function StaffBooksPage() {
                     {b.publisher_name}
                   </div>
                 )}
-                <div style={{ marginTop: 2, fontSize: 13, color: "#5C5040" }}>عدد النسخ: {b.quantity}</div>
+                <div style={{ marginTop: 2, fontSize: 13, color: "#5C5040" }}>
+                  عدد النسخ: {b.quantity}
+                  {Number(b.unplaced) > 0 && (
+                    <span style={{ color: "#9B2226" }}> · {b.unplaced} بدون مكان على الرف</span>
+                  )}
+                </div>
                 <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "0.5px solid #C9BFA8" }}>
                   <a href={`/staff/books/${b.id}/edit`} style={{ display: "flex", alignItems: "center", gap: 4, color: "#1C1712", fontSize: 13, textDecoration: "none" }}>
                     <EditIcon />

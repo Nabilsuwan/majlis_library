@@ -281,3 +281,6 @@ CREATE TABLE intake_submissions (
 -- install matches it.
 -- ------------------------------------------------------------
 ALTER TABLE books ADD COLUMN IF NOT EXISTS proofreader_name TEXT;
+
+-- Phase 1 (Book IDs, copies, shelf boxes) lives in
+-- migrate/phase1-locations.sql: run it after this file on a fresh database.
