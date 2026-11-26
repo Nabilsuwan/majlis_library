@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const parsed = parseCopyCode(n);
   let location = "/staff/books?notfound=1";
   if (parsed) {
-    const { rows } = await pool.query("SELECT id FROM books WHERE book_number = $1", [parsed.bookNumber]);
+    const { rows } = await pool.query("SELECT id FROM books WHERE library = $1 AND book_number = $2", [parsed.library, parsed.bookNumber]);
     if (rows[0]) location = `/staff/books/${rows[0].id}/edit#copies`;
   }
   return new NextResponse(null, { status: 303, headers: { Location: location } });

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getStaffSession } from "@/lib/session";
 import {
+  bookCode,
+  LIBRARY_NAMES,
   copyCode,
   describeShelf,
   getShelfOptions,
@@ -15,7 +17,7 @@ import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, Pi
 async function getBook(id: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.book_number, b.title, b.quantity, b.category_id, b.proofreader_name, b.edition_number,
+    SELECT b.id, b.book_number, b.library, b.title, b.quantity, b.category_id, b.proofreader_name, b.edition_number,
            p.name AS publisher_name,
            COALESCE(
              (SELECT a.canonical_name FROM book_authors ba
@@ -52,7 +54,10 @@ async function saveCopy(formData: FormData) {
 
   if (!session || session.role === "viewer") back("error=permission");
 
-  const shelf = ((formData.get("shelf_code") as string) || "").trim() || null;
+  const { rows: lib } = await pool.query("SELECT library FROM books WHERE id = $1", [bookId]);
+  // Sheikh Library books have no shelf boxes (separate place).
+  const shelf =
+    lib[0]?.library === "sheikh" ? null : ((formData.get("shelf_code") as string) || "").trim() || null;
   const status = formData.get("status") === "missing" ? "missing" : "on_shelf";
   const rawTag = ((formData.get("tag_uid") as string) || "").trim();
   const tag = rawTag ? normalizeTagUid(rawTag) : null;
@@ -66,11 +71,11 @@ async function saveCopy(formData: FormData) {
 
   if (tag) {
     const { rows: clash } = await pool.query(
-      `SELECT b.book_number, c.copy_number FROM book_copies c JOIN books b ON b.id = c.book_id
+      `SELECT b.book_number, b.library, c.copy_number FROM book_copies c JOIN books b ON b.id = c.book_id
        WHERE c.tag_uid = $1 AND c.id <> $2`,
       [tag, copyId]
     );
-    if (clash[0]) back(`error=tag_used&other=${clash[0].book_number}-${clash[0].copy_number}`);
+    if (clash[0]) back(`error=tag_used&other=${copyCode(clash[0].book_number, clash[0].copy_number, clash[0].library)}`);
   }
 
   const placedNow = shelf && shelf !== before[0].shelf_code;
@@ -232,7 +237,8 @@ export default async function EditBookPage({
     <main style={{ padding: "1.25rem", fontFamily: "sans-serif", maxWidth: 500, margin: "0 auto", backgroundColor: "#EDE3D0", minHeight: "100vh" }}>
       <StaffNav />
       <h1 style={{ fontSize: 20 }}>
-        تعديل كتاب <span dir="ltr" style={{ color: "#9B2226" }}>#{book.book_number}</span>
+        تعديل كتاب <span dir="ltr" style={{ color: "#9B2226" }}>#{bookCode(book.book_number, book.library)}</span>
+        <span style={{ fontSize: 13, color: "#5C5040", marginInlineStart: 8 }}>{LIBRARY_NAMES[book.library as "majlis" | "sheikh"]}</span>
       </h1>
       <form action={updateBook} style={{ display: "grid", gap: "0.85rem", backgroundColor: "#F6F0E2", borderRadius: 10, padding: "1.25rem" }}>
         <input type="hidden" name="id" value={book.id} />
@@ -296,7 +302,7 @@ export default async function EditBookPage({
         )}
         <div style={{ display: "grid", gap: 10 }}>
           {copies.map((c) => {
-            const code = copyCode(book.book_number, c.copy_number);
+            const code = copyCode(book.book_number, c.copy_number, book.library);
             const defaultShelf = c.shelf_code || lastShelf;
             return (
               <form
@@ -322,6 +328,15 @@ export default async function EditBookPage({
                     {sp.saved === c.id ? " · تم الحفظ" : ""}
                   </span>
                 </div>
+                {book.library === "sheikh" ? (
+                  <>
+                    <input type="hidden" name="shelf_code" value="" />
+                    <span style={{ fontSize: 13, color: "#5C5040" }}>
+                      {LIBRARY_NAMES.sheikh}: مكان منفصل، بلا خانات رفوف حاليًا.
+                    </span>
+                  </>
+                ) : (
+                  <>
                 <label style={{ fontSize: 13 }}>
                   المكان على الرف
                   <select
@@ -350,6 +365,8 @@ export default async function EditBookPage({
                 )}
                 {c.shelf_code && (
                   <span style={{ fontSize: 12, color: "#5C5040" }}>{describeShelf(c.shelf_code)}</span>
+                )}
+                  </>
                 )}
                 <label style={{ fontSize: 13 }}>
                   الرابط الذي يُكتب على الملصق

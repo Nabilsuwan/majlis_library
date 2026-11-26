@@ -3,14 +3,15 @@ export const dynamic = "force-dynamic";
 import { pool } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { findOrCreateAuthor, findOrCreatePublisher, slugify } from "@/lib/staff-helpers";
+import { bookCode } from "@/lib/copies";
 import { randomUUID } from "crypto";
 import DeleteBookButton from "@/components/DeleteBookButton";
 import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, EditIcon, FeatherIcon, PlusIcon, PinIcon } from "@/lib/icons";
 
 async function getBooks() {
   const { rows } = await pool.query(`
-    SELECT b.id, b.book_number, b.title, b.quantity, b.status,
-           (SELECT count(*) FROM book_copies c WHERE c.book_id = b.id AND c.shelf_code IS NULL) AS unplaced,
+    SELECT b.id, b.book_number, b.library, b.title, b.quantity, b.status,
+           (SELECT count(*) FROM book_copies c WHERE c.book_id = b.id AND c.shelf_code IS NULL AND b.library = 'majlis') AS unplaced,
            p.name AS publisher_name,
            c.name AS category_name,
            COALESCE(
@@ -45,6 +46,7 @@ async function addBook(formData: FormData) {
   const editionNumber = formData.get("edition") ? Number(formData.get("edition")) : null;
   const categoryId = formData.get("category_id") as string;
   const quantity = Number(formData.get("quantity")) || 1;
+  const library = formData.get("library") === "sheikh" ? "sheikh" : "majlis";
 
   if (!title || !authorName || !categoryId) {
     throw new Error("العنوان والمؤلف والتصنيف مطلوبة");
@@ -59,10 +61,10 @@ async function addBook(formData: FormData) {
   const slug = slugify(title, bookId);
 
   const book = await pool.query(
-    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, proofreader_name, edition_number)
-     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8)
+    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, proofreader_name, edition_number, library)
+     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8, $9)
      RETURNING id`,
-    [bookId, title, slug, publisherId, categoryId, quantity, proofreaderName || null, editionNumber]
+    [bookId, title, slug, publisherId, categoryId, quantity, proofreaderName || null, editionNumber, library]
   );
 
   await pool.query(
@@ -176,6 +178,13 @@ export default async function StaffBooksPage() {
             <input name="proofreader" style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
           </label>
           <label style={{ fontSize: 13 }}>
+          المكتبة
+          <select name="library" defaultValue="majlis" style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}>
+            <option value="majlis">مكتبة المجلس</option>
+            <option value="sheikh">مكتبة الشيخ</option>
+          </select>
+        </label>
+        <label style={{ fontSize: 13 }}>
             التصنيف *
             <select name="category_id" required style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}>
               <option value="">— اختر —</option>
@@ -222,7 +231,7 @@ export default async function StaffBooksPage() {
             name="n"
             inputMode="numeric"
             dir="ltr"
-            placeholder="رقم الكتاب (123 أو 123-2)"
+            placeholder="رقم الكتاب (123 أو S-12)"
             style={{ flex: 1, padding: 8, fontSize: 16 }}
           />
           <button type="submit" style={{ padding: "8px 14px", backgroundColor: "#1C1712", color: "#EDE3D0", border: "none", borderRadius: 6 }}>
@@ -238,7 +247,7 @@ export default async function StaffBooksPage() {
               <div key={b.id} style={{ backgroundColor: "#F6F0E2", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                   <div style={{ fontSize: 16, fontWeight: 700 }}>
-                    <span dir="ltr" style={{ color: "#9B2226", fontWeight: 600, marginInlineEnd: 6 }}>#{b.book_number}</span>
+                    <span dir="ltr" style={{ color: b.library === "sheikh" ? "#1F5F5B" : "#9B2226", fontWeight: 600, marginInlineEnd: 6 }}>#{bookCode(b.book_number, b.library)}</span>
                     {b.title}
                   </div>
                   {b.category_name && (

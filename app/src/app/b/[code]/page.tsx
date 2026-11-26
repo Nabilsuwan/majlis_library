@@ -16,8 +16,8 @@ export default async function ShortLinkPage({
   let target: string | null = null;
   if (parsed) {
     const { rows } = await pool.query(
-      "SELECT slug FROM books WHERE book_number = $1 AND status = 'published'",
-      [parsed.bookNumber]
+      "SELECT slug FROM books WHERE library = $1 AND book_number = $2 AND status = 'published'",
+      [parsed.library, parsed.bookNumber]
     );
     if (rows[0]?.slug) {
       target =

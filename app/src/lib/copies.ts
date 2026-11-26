@@ -1,16 +1,35 @@
 import { pool } from "@/lib/db";
 import { headers } from "next/headers";
 
-// Book ID "123" = the title; copy code "123-2" = its second physical copy.
-export function parseCopyCode(code: string): { bookNumber: number; copyNumber: number | null } | null {
-  const m = /^(\d{1,7})(?:-(\d{1,4}))?$/.exec((code || "").trim());
-  if (!m) return null;
-  return { bookNumber: Number(m[1]), copyNumber: m[2] ? Number(m[2]) : null };
+export type Library = "majlis" | "sheikh";
+
+export const LIBRARY_NAMES: Record<Library, string> = {
+  majlis: "مكتبة المجلس",
+  sheikh: "مكتبة الشيخ",
+};
+
+// Book ID: Majlis "123", Sheikh "S-12". Copy code adds the copy: "123-2", "S-12-2".
+export function bookCode(bookNumber: number, library: string = "majlis"): string {
+  return library === "sheikh" ? `S-${bookNumber}` : `${bookNumber}`;
 }
 
-export function copyCode(bookNumber: number, copyNumber: number): string {
-  return `${bookNumber}-${copyNumber}`;
+export function copyCode(bookNumber: number, copyNumber: number, library: string = "majlis"): string {
+  return `${bookCode(bookNumber, library)}-${copyNumber}`;
 }
+
+export function parseCopyCode(
+  code: string
+): { library: Library; bookNumber: number; copyNumber: number | null } | null {
+  const m = /^(S-?)?(\d{1,7})(?:-(\d{1,4}))?$/i.exec((code || "").trim());
+  if (!m) return null;
+  return {
+    library: m[1] ? "sheikh" : "majlis",
+    bookNumber: Number(m[2]),
+    copyNumber: m[3] ? Number(m[3]) : null,
+  };
+}
+
+export const BOOK_CODE_PATTERN = /^\s*(S-?)?\d{1,7}(-\d{1,4})?\s*$/i;
 
 // Shelf box code, e.g. "C12": level letter counted from the bottom (A-F),
 // box number counted from the right, continuous around the room.

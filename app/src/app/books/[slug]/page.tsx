@@ -3,13 +3,13 @@ export const dynamic = "force-dynamic";
 import { pool } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { describeShelf, copyCode } from "@/lib/copies";
+import { describeShelf, copyCode, bookCode, LIBRARY_NAMES } from "@/lib/copies";
 import { getStaffSession } from "@/lib/session";
 
 async function getBook(slug: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.book_number, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url, b.proofreader_name,
+    SELECT b.id, b.book_number, b.library, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url, b.proofreader_name,
            c.name AS category_name,
            p.name AS publisher_name,
            COALESCE(string_agg(a.canonical_name, '، ' ORDER BY ba.sort_order), '') AS authors
@@ -157,7 +157,8 @@ export default async function BookDetailPage({
           — بيانات الكتاب —
         </p>
         <dl style={{ margin: 0 }}>
-          <ColophonRow label="رقم الكتاب" value={String(book.book_number)} />
+          <ColophonRow label="المكتبة" value={LIBRARY_NAMES[book.library as "majlis" | "sheikh"]} />
+          <ColophonRow label="رقم الكتاب" value={bookCode(book.book_number, book.library)} />
           <ColophonRow label="المؤلف" value={book.authors || "غير معروف"} />
           <ColophonRow label="الناشر" value={book.publisher_name || "—"} />
           <ColophonRow label="التصنيف" value={book.category_name || "—"} />
@@ -198,10 +199,12 @@ export default async function BookDetailPage({
                 }}
               >
                 <span style={{ fontFamily: "var(--font-ui), sans-serif", fontSize: "0.8rem", color: "#8C7A5E" }}>
-                  النسخة <b dir="ltr">{copyCode(book.book_number, c.copy_number)}</b>
+                  النسخة <b dir="ltr">{copyCode(book.book_number, c.copy_number, book.library)}</b>
                   {active && " — هذه النسخة"}
                 </span>
-                {c.shelf_code ? (
+                {book.library === "sheikh" ? (
+                  <span style={{ color: "#5C5040" }}>في {LIBRARY_NAMES.sheikh} (مكان منفصل)</span>
+                ) : c.shelf_code ? (
                   <span>
                     <b style={{ fontSize: "1.3rem", color: "#9B2226" }} dir="ltr">{c.shelf_code}</b>{" "}
                     <span style={{ fontSize: "0.9rem", color: "#5C5040" }}>{describeShelf(c.shelf_code, c.wall)}</span>

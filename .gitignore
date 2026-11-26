@@ -4,3 +4,6 @@ node_modules/
 *.log
 .DS_Store
 .env.local
+
+# Import data (private book lists) never goes to GitHub
+app/scripts/data/*.json

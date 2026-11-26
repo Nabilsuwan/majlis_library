@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { pool } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { SearchIcon, FeatherIcon, BuildingIcon } from "@/lib/icons";
+import { BOOK_CODE_PATTERN, LIBRARY_NAMES, bookCode } from "@/lib/copies";
 
 async function getCategories() {
   const { rows } = await pool.query(
@@ -11,7 +12,7 @@ async function getCategories() {
   return rows;
 }
 
-async function searchBooks(q: string, categoryId: string) {
+async function searchBooks(q: string, categoryId: string, library: string) {
   const conditions = ["b.status = 'published'"];
   const params: any[] = [];
 
@@ -25,6 +26,10 @@ async function searchBooks(q: string, categoryId: string) {
         " || '%')"
     );
   }
+  if (library === "majlis" || library === "sheikh") {
+    params.push(library);
+    conditions.push("b.library = $" + params.length);
+  }
   if (categoryId) {
     params.push(categoryId);
     conditions.push("b.category_id = $" + params.length);
@@ -36,7 +41,7 @@ async function searchBooks(q: string, categoryId: string) {
 
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.title, b.slug,
+    SELECT b.id, b.title, b.slug, b.library, b.book_number,
            c.name AS category_name,
            p.name AS publisher_name,
            COALESCE(string_agg(a.canonical_name, '، ' ORDER BY ba.sort_order), '') AS authors
@@ -58,14 +63,15 @@ async function searchBooks(q: string, categoryId: string) {
 export default async function BooksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; library?: string }>;
 }) {
   const params = await searchParams;
   const q = params.q || "";
-  if (/^\s*\d{1,7}(-\d{1,4})?\s*$/.test(q)) redirect(`/b/${q.trim()}`);
+  if (BOOK_CODE_PATTERN.test(q)) redirect(`/b/${q.trim().toUpperCase()}`);
   const categoryId = params.category || "";
+  const library = params.library || "";
   const [books, categories] = await Promise.all([
-    searchBooks(q, categoryId),
+    searchBooks(q, categoryId, library),
     getCategories(),
   ]);
 
@@ -103,6 +109,21 @@ export default async function BooksPage({
             style={{ border: "none", outline: "none", flex: 1, fontSize: 14, background: "transparent" }}
           />
         </div>
+        <select
+          name="library"
+          defaultValue={library}
+          style={{
+            padding: "0.55rem 0.75rem",
+            border: "1px solid #C9BFA8",
+            backgroundColor: "#fff",
+            borderRadius: 6,
+            fontSize: 14,
+          }}
+        >
+          <option value="">كل المكتبات</option>
+          <option value="majlis">{LIBRARY_NAMES.majlis}</option>
+          <option value="sheikh">{LIBRARY_NAMES.sheikh}</option>
+        </select>
         <select
           name="category"
           defaultValue={categoryId}
@@ -172,6 +193,9 @@ export default async function BooksPage({
                   {b.category_name}
                 </span>
               )}
+            </div>
+            <div style={{ marginTop: 4, fontFamily: "var(--font-ui), sans-serif", fontSize: "0.75rem", color: b.library === "sheikh" ? "#1F5F5B" : "#8C7A5E" }}>
+              {LIBRARY_NAMES[b.library as "majlis" | "sheikh"]} · <span dir="ltr">{bookCode(b.book_number, b.library)}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontFamily: "var(--font-ui), sans-serif", fontSize: "0.82rem", color: "#5C5040" }}>
               <FeatherIcon />

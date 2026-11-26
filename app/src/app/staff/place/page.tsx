@@ -24,10 +24,11 @@ const COPY_COLUMNS = `c.id, c.copy_number, c.shelf_code, c.tag_uid, b.id AS book
 
 async function findCopies(q: string): Promise<CopyRow[]> {
   const code = parseCopyCode(q);
+  if (code && code.library === "sheikh") return [];
   if (code) {
     const { rows } = await pool.query(
       `SELECT ${COPY_COLUMNS} FROM book_copies c JOIN books b ON b.id = c.book_id
-       WHERE b.book_number = $1 AND ($2::int IS NULL OR c.copy_number = $2)
+       WHERE b.library = 'majlis' AND b.book_number = $1 AND ($2::int IS NULL OR c.copy_number = $2)
        ORDER BY c.copy_number`,
       [code.bookNumber, code.copyNumber]
     );
@@ -35,8 +36,9 @@ async function findCopies(q: string): Promise<CopyRow[]> {
   }
   const { rows } = await pool.query(
     `SELECT ${COPY_COLUMNS} FROM book_copies c JOIN books b ON b.id = c.book_id
-     WHERE b.title_normalized LIKE '%' || immutable_unaccent(lower($1)) || '%'
-        OR similarity(b.title_normalized, immutable_unaccent(lower($1))) > 0.3
+     WHERE b.library = 'majlis'
+       AND (b.title_normalized LIKE '%' || immutable_unaccent(lower($1)) || '%'
+        OR similarity(b.title_normalized, immutable_unaccent(lower($1))) > 0.3)
      ORDER BY similarity(b.title_normalized, immutable_unaccent(lower($1))) DESC, b.book_number, c.copy_number
      LIMIT 25`,
     [q]
@@ -57,10 +59,11 @@ async function unplaced(): Promise<{ rows: CopyRow[]; total: number }> {
   const [{ rows }, count] = await Promise.all([
     pool.query(
       `SELECT ${COPY_COLUMNS} FROM book_copies c JOIN books b ON b.id = c.book_id
-       WHERE c.shelf_code IS NULL AND c.status <> 'withdrawn'
+       WHERE c.shelf_code IS NULL AND c.status <> 'withdrawn' AND b.library = 'majlis'
        ORDER BY b.book_number DESC, c.copy_number LIMIT 30`
     ),
-    pool.query(`SELECT count(*)::int AS n FROM book_copies WHERE shelf_code IS NULL AND status <> 'withdrawn'`),
+    pool.query(`SELECT count(*)::int AS n FROM book_copies c JOIN books b ON b.id = c.book_id
+                WHERE c.shelf_code IS NULL AND c.status <> 'withdrawn' AND b.library = 'majlis'`),
   ]);
   return { rows, total: count.rows[0].n };
 }
@@ -89,18 +92,18 @@ async function placeCopy(formData: FormData) {
 
   const { rows: before } = await pool.query(
     `SELECT c.tag_uid, c.shelf_code, c.status, c.copy_number, b.book_number
-     FROM book_copies c JOIN books b ON b.id = c.book_id WHERE c.id = $1`,
+     FROM book_copies c JOIN books b ON b.id = c.book_id WHERE c.id = $1 AND b.library = 'majlis'`,
     [copyId]
   );
   if (!before[0]) backTo(box, q, "error=missing_copy");
 
   if (tag) {
     const { rows: clash } = await pool.query(
-      `SELECT b.book_number, c.copy_number FROM book_copies c JOIN books b ON b.id = c.book_id
+      `SELECT b.book_number, b.library, c.copy_number FROM book_copies c JOIN books b ON b.id = c.book_id
        WHERE c.tag_uid = $1 AND c.id <> $2`,
       [tag, copyId]
     );
-    if (clash[0]) backTo(box, q, `error=tag_used&other=${clash[0].book_number}-${clash[0].copy_number}`);
+    if (clash[0]) backTo(box, q, `error=tag_used&other=${copyCode(clash[0].book_number, clash[0].copy_number, clash[0].library)}`);
   }
 
   const newTag = tag ?? before[0].tag_uid; // an empty field keeps the existing tag

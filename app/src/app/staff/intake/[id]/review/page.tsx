@@ -33,6 +33,7 @@ async function confirmIntake(formData: FormData) {
   const editionNumber = formData.get("edition") ? Number(formData.get("edition")) : null;
   const categoryId = formData.get("category_id") as string;
   const quantity = Number(formData.get("quantity")) || 1;
+  const library = formData.get("library") === "sheikh" ? "sheikh" : "majlis";
 
   if (!title || !authorName || !categoryId) {
     throw new Error("العنوان والمؤلف والتصنيف مطلوبة");
@@ -47,9 +48,9 @@ async function confirmIntake(formData: FormData) {
   const slug = slugify(title, bookId);
 
   await pool.query(
-    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, cover_image_url, proofreader_name, edition_number)
-     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8, $9)`,
-    [bookId, title, slug, publisherId, categoryId, quantity, coverImageUrl || null, proofreaderName || null, editionNumber]
+    `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status, cover_image_url, proofreader_name, edition_number, library)
+     VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8, $9, $10)`,
+    [bookId, title, slug, publisherId, categoryId, quantity, coverImageUrl || null, proofreaderName || null, editionNumber, library]
   );
 
   await pool.query(
@@ -188,6 +189,13 @@ export default async function IntakeReviewPage({
         <label style={{ fontSize: 13 }}>
           المحقق
           <input name="proofreader" defaultValue={suggested.proofreader || ""} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
+        </label>
+        <label style={{ fontSize: 13 }}>
+          المكتبة
+          <select name="library" defaultValue="majlis" style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }}>
+            <option value="majlis">مكتبة المجلس</option>
+            <option value="sheikh">مكتبة الشيخ</option>
+          </select>
         </label>
         <label style={{ fontSize: 13 }}>
           التصنيف *
