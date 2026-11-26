@@ -9,7 +9,7 @@ import { getStaffSession } from "@/lib/session";
 async function getBook(slug: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.book_number, b.library, b.title, b.subtitle, b.edition_number, b.page_count, b.slug, b.cover_image_url, b.proofreader_name,
+    SELECT b.id, b.book_number, b.library, b.title, b.subtitle, b.edition_number, b.edition_text, b.volumes, b.page_count, b.slug, b.cover_image_url, b.proofreader_name,
            c.name AS category_name,
            p.name AS publisher_name,
            COALESCE(string_agg(a.canonical_name, '، ' ORDER BY ba.sort_order), '') AS authors
@@ -162,8 +162,11 @@ export default async function BookDetailPage({
           <ColophonRow label="المؤلف" value={book.authors || "غير معروف"} />
           <ColophonRow label="الناشر" value={book.publisher_name || "—"} />
           <ColophonRow label="التصنيف" value={book.category_name || "—"} />
-          {book.edition_number && (
-            <ColophonRow label="الطبعة" value={String(book.edition_number)} />
+          {(book.edition_text || book.edition_number) && (
+            <ColophonRow label="الطبعة" value={book.edition_text || String(book.edition_number)} />
+          )}
+          {book.volumes > 1 && (
+            <ColophonRow label="المجلدات" value={String(book.volumes)} />
           )}
           {book.page_count && (
             <ColophonRow label="الصفحات" value={String(book.page_count)} />

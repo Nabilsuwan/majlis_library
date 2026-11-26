@@ -1,17 +1,19 @@
-// Imports the Sheikh Library (مكتبة الشيخ) list: the 192 "Sheik" rows of
-// sheik__privite_library_db.xlsx, cleaned into data/sheikh-books.json.
+// Imports the Sheikh Library (مكتبة الشيخ) catalogue, cleaned from the
+// Excel file into data/sheikh-library.json (each row keeps its Excel row
+// number as import_ref).
 //
 //   docker compose exec app node scripts/import-sheikh.mjs           (check only, saves nothing)
 //   docker compose exec app node scripts/import-sheikh.mjs --apply   (saves)
 //
-// Safe to re-run: a title already in the Sheikh Library is skipped.
+// Safe to re-run: a row already imported (same import_ref) is skipped.
+// Different books may share a title, so titles are not used for that.
 // Authors, publishers and categories that already exist are reused.
 import pg from "pg";
 import { readFile } from "fs/promises";
 import { randomUUID } from "crypto";
 
 const apply = process.argv.includes("--apply");
-const books = JSON.parse(await readFile(new URL("./data/sheikh-books.json", import.meta.url), "utf8"));
+const books = JSON.parse(await readFile(new URL("./data/" + (process.argv.find((a) => a.endsWith(".json")) || "sheikh-library.json"), import.meta.url), "utf8"));
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const db = await pool.connect();
 const norm = (s) => (s || "").replace(/\s+/g, " ").trim();
@@ -28,6 +30,10 @@ try {
     "SELECT 1 FROM information_schema.columns WHERE table_name = 'books' AND column_name = 'library'"
   );
   if (!col.rowCount) throw new Error("Run migrate/phase2-libraries.sql first.");
+  const col2 = await db.query(
+    "SELECT 1 FROM information_schema.columns WHERE table_name = 'books' AND column_name = 'import_ref'"
+  );
+  if (!col2.rowCount) throw new Error("Run migrate/phase2b-book-details.sql first.");
 
   // Numbers are given here (S-1, S-2… in file order), not drawn from the
   // sequence, so a check-only run never uses any up.
@@ -51,13 +57,15 @@ try {
 
   for (const b of books) {
     const title = norm(b.title);
-    const same = `SELECT id, book_number FROM books
-                  WHERE library = $1 AND title_normalized = immutable_unaccent(lower($2)) LIMIT 1`;
-    if ((await db.query(same, ["sheikh", title])).rowCount) {
+    if (b.ref && (await db.query("SELECT 1 FROM books WHERE import_ref = $1", [b.ref])).rowCount) {
       stats.skippedAlreadyImported++;
       continue;
     }
-    const twin = await db.query(same, ["majlis", title]);
+    const twin = await db.query(
+      `SELECT book_number FROM books
+       WHERE library = 'majlis' AND title_normalized = immutable_unaccent(lower($1)) LIMIT 1`,
+      [title]
+    );
     if (twin.rowCount) {
       stats.alsoInMajlis++;
       if (majlisTwins.length < 10) majlisTwins.push(`${title}  (Majlis #${twin.rows[0].book_number})`);
@@ -80,10 +88,12 @@ try {
     const id = randomUUID();
     await db.query(
       `INSERT INTO books (id, title, slug, publisher_id, category_id, quantity, status,
-                          proofreader_name, edition_number, page_count, library, book_number)
-       VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8, $9, 'sheikh', $10)`,
+                          proofreader_name, edition_number, page_count, library, book_number,
+                          edition_text, volumes, notes, import_ref)
+       VALUES ($1, $2, $3, $4, $5, $6, 'published', $7, $8, $9, 'sheikh', $10, $11, $12, $13, $14)`,
       [id, title, id.replace(/-/g, "").slice(0, 8), publisherId, categoryId, b.quantity || 1,
-       norm(b.editor) || null, b.edition_number ?? null, b.pages ?? null, nextNumber++]
+       norm(b.editor) || null, b.edition_number ?? null, b.pages ?? null, nextNumber++,
+       norm(b.edition_text) || null, b.volumes ?? null, norm(b.notes) || null, b.ref || null]
     );
     if (authorId) {
       await db.query(
@@ -102,7 +112,7 @@ try {
   console.log(apply ? "=== IMPORT (saved) ===" : "=== CHECK ONLY (nothing saved) ===");
   console.log(`rows in file .................. ${stats.rows}`);
   console.log(`books to add .................. ${stats.added}  (${stats.copies} copies)`);
-  console.log(`already in Sheikh, skipped .... ${stats.skippedAlreadyImported}`);
+  console.log(`already imported, skipped ..... ${stats.skippedAlreadyImported}`);
   console.log(`same title also in Majlis ..... ${stats.alsoInMajlis}  (kept as separate records)`);
   console.log(`new authors ................... ${stats.newAuthors.size}`);
   console.log(`new publishers ................ ${stats.newPublishers.size}`);

@@ -17,7 +17,7 @@ import { BookIcon, UsersIcon, BuildingIcon, CameraIcon, HomeIcon, LogoutIcon, Pi
 async function getBook(id: string) {
   const { rows } = await pool.query(
     `
-    SELECT b.id, b.book_number, b.library, b.title, b.quantity, b.category_id, b.proofreader_name, b.edition_number,
+    SELECT b.id, b.book_number, b.library, b.title, b.quantity, b.category_id, b.proofreader_name, b.edition_number, b.edition_text, b.volumes, b.notes,
            p.name AS publisher_name,
            COALESCE(
              (SELECT a.canonical_name FROM book_authors ba
@@ -117,6 +117,9 @@ async function updateBook(formData: FormData) {
   const editionNumber = formData.get("edition") ? Number(formData.get("edition")) : null;
   const categoryId = formData.get("category_id") as string;
   const quantity = Number(formData.get("quantity")) || 1;
+  const editionText = (formData.get("edition_text") as string)?.trim() || null;
+  const volumes = Number(formData.get("volumes")) || null;
+  const notes = (formData.get("notes") as string)?.trim() || null;
 
   if (!title || !authorName || !categoryId) {
     throw new Error("العنوان والمؤلف والتصنيف مطلوبة");
@@ -129,8 +132,10 @@ async function updateBook(formData: FormData) {
 
   await pool.query(
     `UPDATE books SET title = $1, publisher_id = $2, category_id = $3,
-     quantity = $4, proofreader_name = $5, edition_number = $6, updated_at = now() WHERE id = $7`,
-    [title, publisherId, categoryId, quantity, proofreaderName || null, editionNumber, id]
+     quantity = $4, proofreader_name = $5, edition_number = $6,
+     edition_text = $8, volumes = $9, notes = $10, updated_at = now() WHERE id = $7`,
+    [title, publisherId, categoryId, quantity, proofreaderName || null, editionNumber, id,
+     editionText, volumes, notes]
   );
 
   await pool.query(
@@ -272,6 +277,18 @@ export default async function EditBookPage({
         <label style={{ fontSize: 13 }}>
           رقم الإصدار
           <input name="edition" type="number" defaultValue={book.edition_number || ""} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
+        </label>
+        <label style={{ fontSize: 13 }}>
+          الطبعة (نص كما في الكتاب)
+          <input name="edition_text" defaultValue={book.edition_text || ""} placeholder="مثال: الأولى 1416-1995" style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
+        </label>
+        <label style={{ fontSize: 13 }}>
+          عدد المجلدات
+          <input name="volumes" type="number" defaultValue={book.volumes || ""} min={1} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box" }} />
+        </label>
+        <label style={{ fontSize: 13 }}>
+          ملاحظات (للموظفين فقط)
+          <textarea name="notes" defaultValue={book.notes || ""} rows={3} style={{ width: "100%", padding: 8, marginTop: 4, boxSizing: "border-box", fontFamily: "inherit" }} />
         </label>
         <label style={{ fontSize: 13 }}>
           عدد النسخ
