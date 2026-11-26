@@ -7,3 +7,4 @@ node_modules/
 
 # Import data (private book lists) never goes to GitHub
 app/scripts/data/*.json
+*.tsbuildinfo
